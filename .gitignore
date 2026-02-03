@@ -1,0 +1,15 @@
+# MATLAB / Simulink
+*.asv
+*.m~
+*.slx
+*.slxc
+*.sltx
+*.slprt
+*.mdl
+slprj/
+
+# Data / output
+*.mat
+
+# OS
+.DS_Store
