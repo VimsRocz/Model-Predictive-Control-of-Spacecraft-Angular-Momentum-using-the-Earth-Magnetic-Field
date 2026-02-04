@@ -3,7 +3,7 @@ function run_all_and_compare(P)
 
 repo_root = fileparts(mfilename('fullpath'));
 addpath(repo_root);
-addpath(fullfile(repo_root, 'params'));
+addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
 addpath(fullfile(repo_root, 'models'));
 addpath(fullfile(repo_root, 'controllers'));
 addpath(fullfile(repo_root, 'plotting'));

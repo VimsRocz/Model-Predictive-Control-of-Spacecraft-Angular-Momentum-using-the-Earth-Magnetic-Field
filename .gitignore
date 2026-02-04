@@ -11,6 +11,10 @@ slprj/
 # Data / output
 *.mat
 outputs/
+MATLAB/Output/*
+!MATLAB/Output/README.md
+Simulink/Output/*
+!Simulink/Output/README.md
 
 # OS
 .DS_Store

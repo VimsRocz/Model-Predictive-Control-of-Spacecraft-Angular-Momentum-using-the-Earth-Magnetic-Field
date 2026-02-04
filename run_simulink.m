@@ -9,7 +9,7 @@ clc;
 
 repo_root = fileparts(mfilename('fullpath'));
 addpath(repo_root);
-addpath(fullfile(repo_root, 'params'));
+addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
 addpath(fullfile(repo_root, 'models'));
 addpath(fullfile(repo_root, 'controllers'));
 addpath(fullfile(repo_root, 'plotting'));
@@ -70,7 +70,7 @@ tau_ext_log = simOut.get('tau_ext_log');
 tau_mtq_log = simOut.get('tau_mtq_log');
 tau_total_log = simOut.get('tau_total_log');
 
-out_dir = fullfile(repo_root, 'outputs', 'simulink');
+out_dir = fullfile(repo_root, 'Simulink', 'Output', 'momentum');
 if ~exist(out_dir, 'dir')
     mkdir(out_dir);
 end
@@ -92,7 +92,7 @@ function run_simulink_full_internal(P)
 % Full-plant Simulink run
 repo_root = fileparts(mfilename('fullpath'));
 addpath(repo_root);
-addpath(fullfile(repo_root, 'params'));
+addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
 addpath(fullfile(repo_root, 'models'));
 addpath(fullfile(repo_root, 'controllers'));
 addpath(fullfile(repo_root, 'plotting'));
@@ -120,7 +120,7 @@ S.w_des_body = normalize_nx3(simOut.get('w_des_body_log').signals.values);
 
 S.desatMode = "simulink/" + string(P.simulink.controller);
 
-out_dir = fullfile(repo_root, 'outputs', 'simulink_full');
+out_dir = fullfile(repo_root, 'Simulink', 'Output', 'full');
 if ~exist(out_dir, 'dir')
     mkdir(out_dir);
 end
@@ -135,7 +135,7 @@ plot_results_full_simulink(out_file);
 
 % If a MATLAB run exists, print a quick consistency check.
 try
-    fmat = fullfile(repo_root, 'outputs', 'matlab_full', 'sim_out_full.mat');
+    fmat = fullfile(repo_root, 'MATLAB', 'Output', 'full', 'sim_out_full.mat');
     if exist(fmat,'file')
         Sm = load(fmat);
         t = Sm.t(:);

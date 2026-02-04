@@ -19,7 +19,11 @@ This repository contains a **buildable MATLAB + Simulink project** for magnetic-
 - `run_simulink.m`
 
 **Parameter file:**
-- `params/params_default.m`
+- `MATLAB/Input/params/params_default.m`
+
+**Folder structure (requested):**
+- `MATLAB/Input`, `MATLAB/Processing`, `MATLAB/Output`
+- `Simulink/Input`, `Simulink/Processing`, `Simulink/Output`
 
 **Common parameters (override via UI or by passing a custom `P`):**
 - `P.plant.model = "full" | "momentum"`
@@ -41,45 +45,50 @@ This repository contains a **buildable MATLAB + Simulink project** for magnetic-
 - `models/earth_mag_field_eci.m` → `models/earth_igrf_field.m` or `models/earth_dipole_field.m`
 - `models/ext_torques_body.m` (full) or `models/ext_torques.m` (momentum-only)
 - Internal drivers: `main_run_full_sim.m`, `main_run_sim.m` (do not run directly)
+- Logical grouping: see `MATLAB/Processing/README.md`
 
 **Simulink pipeline (called by `run_simulink.m`):**
 - Full model: `build_simulink_full_model_imf.m` → `mtq_full_model.slx`
 - Full model stepper: `sim_full_step.m`
 - Momentum-only model: `build_simulink_model.m` or `build_simulink_model_imf.m`
 - IMF helpers: `sim_b_field.m`, `sim_controller.m`, `sim_tau_ext.m`
+- Logical grouping: see `Simulink/Processing/README.md`
 
 ## **Output**
 
-**MATLAB outputs:**
-- Full model:
-- `outputs/matlab_full/sim_out_full.mat`
-- `outputs/matlab_full/report_full_timeseries_*.png`
-- `outputs/matlab_full/scene_full_earth_*.png`
-- Momentum-only:
-- `outputs/matlab/sim_out_matlab.mat`
-- `outputs/matlab/report_timeseries_*.png`
-- `outputs/matlab/scene_earth_*.png`
+**MATLAB outputs (full model):**
+- `MATLAB/Output/full/sim_out_full.mat`
+- `MATLAB/Output/full/report_full_timeseries_*.png`
+- `MATLAB/Output/full/scene_full_earth_*.png`
 
-**Simulink outputs:**
-- Full model:
-- `outputs/simulink_full/sim_out_full_simulink.mat`
-- `outputs/simulink_full/report_full_timeseries_Simulink.png`
-- `outputs/simulink_full/scene_full_earth_Simulink.png`
-- Momentum-only:
-- `outputs/simulink/sim_out_simulink.mat`
-- `outputs/simulink/report_timeseries_Simulink.png`
-- `outputs/simulink/scene_earth_Simulink.png`
+**MATLAB outputs (momentum-only):**
+- `MATLAB/Output/momentum/sim_out_matlab.mat`
+- `MATLAB/Output/momentum/report_timeseries_*.png`
+- `MATLAB/Output/momentum/scene_earth_*.png`
+
+**MATLAB outputs (benchmarks):**
+- `MATLAB/Output/analysis/benchmark_summary.*`
+
+**Simulink outputs (full model):**
+- `Simulink/Output/full/sim_out_full_simulink.mat`
+- `Simulink/Output/full/report_full_timeseries_Simulink.png`
+- `Simulink/Output/full/scene_full_earth_Simulink.png`
+
+**Simulink outputs (momentum-only):**
+- `Simulink/Output/momentum/sim_out_simulink.mat`
+- `Simulink/Output/momentum/report_timeseries_Simulink.png`
+- `Simulink/Output/momentum/scene_earth_Simulink.png`
 
 **MATLAB vs Simulink consistency:**
 - `run_matlab.m` and `run_simulink.m` now use the same controller (`P.controller` / `P.simulink.controller`) and the same plant (`P.plant.model`). Both print a max-difference summary if the other output exists.
 
 ## Folders
 
-- `params/` defaults and scenario inputs
+- `MATLAB/` (Input/Processing/Output)
+- `Simulink/` (Input/Processing/Output)
 - `models/` dynamics, orbit, and environment models
 - `controllers/` baseline + MPC controllers
 - `plotting/` 2D reports and 3D scenes/animations
-- `outputs/` generated MAT files and figures
 
 ## Controller notes
 

@@ -11,7 +11,7 @@ function interactive_mtq_explorer()
 
 repo_root = fileparts(mfilename('fullpath'));
 addpath(repo_root);
-addpath(fullfile(repo_root, 'params'));
+addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
 addpath(fullfile(repo_root, 'models'));
 addpath(fullfile(repo_root, 'controllers'));
 addpath(fullfile(repo_root, 'plotting'));
@@ -120,7 +120,7 @@ btnAnimMatlab.Layout.Row = 28; btnAnimMatlab.Layout.Column = 1;
 btnAnimSim = uibutton(gl, 'Text','Animate Simulink', 'ButtonPushedFcn', @onAnimateSimulink);
 btnAnimSim.Layout.Row = 28; btnAnimSim.Layout.Column = 2;
 
-btnOpenOut = uibutton(gl, 'Text','Open outputs/', 'ButtonPushedFcn', @onOpenOutputs);
+btnOpenOut = uibutton(gl, 'Text','Open MATLAB/Output', 'ButtonPushedFcn', @onOpenOutputs);
 btnOpenOut.Layout.Row = 29; btnOpenOut.Layout.Column = 1;
 
 btnBench = uibutton(gl, 'Text','Run Benchmarks', 'ButtonPushedFcn', @onRunBenchmarks);
@@ -183,18 +183,18 @@ function out = matlab_out_file(mode)
         mode = string(ctrlMode.Value);
     end
     safe = string(regexprep(char(mode), '[^A-Za-z0-9]+', '_'));
-    out = fullfile(repo_root, 'outputs', 'matlab', "sim_out_matlab_" + safe + ".mat");
+    out = fullfile(repo_root, 'MATLAB', 'Output', 'momentum', "sim_out_matlab_" + safe + ".mat");
     if ~exist(out, 'file')
-        out = fullfile(repo_root, 'outputs', 'matlab', 'sim_out_matlab.mat');
+        out = fullfile(repo_root, 'MATLAB', 'Output', 'momentum', 'sim_out_matlab.mat');
     end
 end
 
 function out = simulink_out_file()
-    out = fullfile(repo_root, 'outputs', 'simulink', 'sim_out_simulink.mat');
+    out = fullfile(repo_root, 'Simulink', 'Output', 'momentum', 'sim_out_simulink.mat');
 end
 
 function out = simulink_full_out_file()
-    out = fullfile(repo_root, 'outputs', 'simulink_full', 'sim_out_full_simulink.mat');
+    out = fullfile(repo_root, 'Simulink', 'Output', 'full', 'sim_out_full_simulink.mat');
 end
 
 % ---------- callbacks ----------
@@ -237,9 +237,9 @@ function onRunBoth(~, ~)
         run_matlab(P);
         run_simulink(P);
         if startsWith(string(plantMode.Value), "full")
-            logLine("Full MATLAB + Simulink complete. See outputs/matlab_full and outputs/simulink_full.");
+            logLine("Full MATLAB + Simulink complete. See MATLAB/Output/full and Simulink/Output/full.");
         else
-            logLine("Compare complete. See outputs/ and console for diffs.");
+            logLine("Compare complete. See MATLAB/Output/momentum and Simulink/Output/momentum.");
         end
     catch ME
         logLine("Run/compare error: " + ME.message);
@@ -254,12 +254,12 @@ function onRunMatlabBothControllers(~, ~)
         if startsWith(string(plantMode.Value), "full")
             main_run_full_sim("baseline", P);
             main_run_full_sim("mpc", P);
-            logLine("Baseline vs MPC full complete. See outputs/matlab_full/ for files.");
+            logLine("Baseline vs MPC full complete. See MATLAB/Output/full/ for files.");
         else
             main_run_sim("baseline", P);
             main_run_sim("mpc", P);
             compare_baseline_vs_mpc(P);
-            logLine("Baseline vs MPC complete. See outputs/matlab/ for files.");
+            logLine("Baseline vs MPC complete. See MATLAB/Output/momentum/ for files.");
         end
     catch ME
         logLine("Run/compare error: " + ME.message);
@@ -293,9 +293,9 @@ function out = full_out_file(mode)
         mode = string(ctrlMode.Value);
     end
     safe = string(regexprep(char(mode), '[^A-Za-z0-9]+', '_'));
-    out = fullfile(repo_root, 'outputs', 'matlab_full', "sim_out_full_" + safe + ".mat");
+    out = fullfile(repo_root, 'MATLAB', 'Output', 'full', "sim_out_full_" + safe + ".mat");
     if ~exist(out, 'file')
-        out = fullfile(repo_root, 'outputs', 'matlab_full', 'sim_out_full.mat');
+        out = fullfile(repo_root, 'MATLAB', 'Output', 'full', 'sim_out_full.mat');
     end
 end
 
@@ -338,12 +338,13 @@ function onAnimateSimulink(~, ~)
 end
 
 function onOpenOutputs(~, ~)
-    out_dir = fullfile(repo_root, 'outputs');
+    out_dir = fullfile(repo_root, 'MATLAB', 'Output');
     if exist(out_dir, 'dir')
         try
             open(out_dir);
         catch
-            logLine("Outputs dir: " + out_dir);
+            logLine("MATLAB output dir: " + out_dir);
+            logLine("Simulink output dir: " + fullfile(repo_root, 'Simulink', 'Output'));
         end
     end
 end
@@ -352,7 +353,7 @@ function onRunBenchmarks(~, ~)
     logLine("Running thesis-style scenario benchmarks (MATLAB)…");
     try
         run_thesis_benchmarks();
-        logLine("Benchmarks complete. See outputs/analysis/.");
+        logLine("Benchmarks complete. See MATLAB/Output/analysis/.");
     catch ME
         logLine("Benchmarks error: " + ME.message);
         uialert(fig, ME.message, 'Benchmarks Failed');

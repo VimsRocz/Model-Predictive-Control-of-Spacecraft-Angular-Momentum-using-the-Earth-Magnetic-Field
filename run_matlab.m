@@ -11,7 +11,7 @@ clc;
 
 repo_root = fileparts(mfilename('fullpath'));
 addpath(repo_root);
-addpath(fullfile(repo_root, 'params'));
+addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
 addpath(fullfile(repo_root, 'models'));
 addpath(fullfile(repo_root, 'controllers'));
 addpath(fullfile(repo_root, 'plotting'));
@@ -53,8 +53,8 @@ function compare_last_runs(P)
 repo_root = fileparts(mfilename('fullpath'));
 
 if strcmpi(string(P.plant.model), "full")
-    fmat = fullfile(repo_root, 'outputs', 'matlab_full', 'sim_out_full.mat');
-    fsim = fullfile(repo_root, 'outputs', 'simulink_full', 'sim_out_full_simulink.mat');
+    fmat = fullfile(repo_root, 'MATLAB', 'Output', 'full', 'sim_out_full.mat');
+    fsim = fullfile(repo_root, 'Simulink', 'Output', 'full', 'sim_out_full_simulink.mat');
     if ~exist(fmat,'file') || ~exist(fsim,'file')
         return;
     end
@@ -68,8 +68,8 @@ if strcmpi(string(P.plant.model), "full")
     diff = vecnorm(hm - hs_i, 2, 2);
     fprintf('MATLAB vs Simulink (full) max |h_w diff| = %.3e\n', max(diff));
 else
-    fmat = fullfile(repo_root, 'outputs', 'matlab', 'sim_out_matlab.mat');
-    fsim = fullfile(repo_root, 'outputs', 'simulink', 'sim_out_simulink.mat');
+    fmat = fullfile(repo_root, 'MATLAB', 'Output', 'momentum', 'sim_out_matlab.mat');
+    fsim = fullfile(repo_root, 'Simulink', 'Output', 'momentum', 'sim_out_simulink.mat');
     if ~exist(fmat,'file') || ~exist(fsim,'file')
         return;
     end
@@ -84,4 +84,3 @@ else
     fprintf('MATLAB vs Simulink (momentum) max |x diff| = %.3e\n', max(diff));
 end
 end
-

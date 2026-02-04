@@ -8,7 +8,7 @@ end
 
 repo_root = fileparts(mfilename('fullpath'));
 addpath(repo_root);
-addpath(fullfile(repo_root, 'params'));
+addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
 addpath(fullfile(repo_root, 'models'));
 addpath(fullfile(repo_root, 'controllers'));
 addpath(fullfile(repo_root, 'plotting'));
@@ -28,7 +28,7 @@ B_log = S.B_log;
 ctrlMode = S.ctrlMode;
 solve_time_s = S.solve_time_s; %#ok<NASGU>
 
-out_dir = fullfile(repo_root, "outputs", "matlab");
+out_dir = fullfile(repo_root, "MATLAB", "Output", "momentum");
 if ~exist(out_dir, "dir")
     mkdir(out_dir);
 end

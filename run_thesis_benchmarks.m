@@ -2,20 +2,20 @@ function run_thesis_benchmarks()
 %RUN_THESIS_BENCHMARKS Run a small scenario suite and compare baseline vs MPC (MATLAB).
 %
 % Outputs:
-%   outputs/analysis/benchmark_summary.csv
-%   outputs/analysis/benchmark_summary.mat
-%   outputs/analysis/benchmark_summary.png
+%   MATLAB/Output/analysis/benchmark_summary.csv
+%   MATLAB/Output/analysis/benchmark_summary.mat
+%   MATLAB/Output/analysis/benchmark_summary.png
 
 repo_root = fileparts(mfilename('fullpath'));
 addpath(repo_root);
-addpath(fullfile(repo_root, 'params'));
+addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
 addpath(fullfile(repo_root, 'models'));
 addpath(fullfile(repo_root, 'controllers'));
 addpath(fullfile(repo_root, 'plotting'));
 
 P0 = params_default();
 
-out_dir = fullfile(repo_root, 'outputs', 'analysis');
+out_dir = fullfile(repo_root, 'MATLAB', 'Output', 'analysis');
 if ~exist(out_dir, 'dir')
     mkdir(out_dir);
 end

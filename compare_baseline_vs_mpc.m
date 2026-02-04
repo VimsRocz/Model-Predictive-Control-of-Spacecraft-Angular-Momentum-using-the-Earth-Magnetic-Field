@@ -2,13 +2,13 @@ function compare_baseline_vs_mpc(P)
 %COMPARE_BASELINE_VS_MPC Compare MATLAB baseline vs MPC runs and plot metrics.
 %
 % Expects:
-%   outputs/matlab/sim_out_matlab_baseline.mat
-%   outputs/matlab/sim_out_matlab_mpc.mat
+%   MATLAB/Output/momentum/sim_out_matlab_baseline.mat
+%   MATLAB/Output/momentum/sim_out_matlab_mpc.mat
 %
 % If P is provided, it is used only for labeling (files are loaded from disk).
 
 repo_root = fileparts(mfilename('fullpath'));
-out_dir = fullfile(repo_root, 'outputs', 'matlab');
+out_dir = fullfile(repo_root, 'MATLAB', 'Output', 'momentum');
 
 f_base = fullfile(out_dir, 'sim_out_matlab_baseline.mat');
 f_mpc  = fullfile(out_dir, 'sim_out_matlab_mpc.mat');

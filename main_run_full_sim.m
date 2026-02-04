@@ -9,7 +9,7 @@ end
 
 repo_root = fileparts(mfilename('fullpath'));
 addpath(repo_root);
-addpath(fullfile(repo_root, 'params'));
+addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
 addpath(fullfile(repo_root, 'models'));
 addpath(fullfile(repo_root, 'controllers'));
 addpath(fullfile(repo_root, 'plotting'));
@@ -20,7 +20,7 @@ end
 
 S = simulate_mtq_full(P, desatMode);
 
-out_dir = fullfile(repo_root, "outputs", "matlab_full");
+out_dir = fullfile(repo_root, "MATLAB", "Output", "full");
 if ~exist(out_dir, "dir")
     mkdir(out_dir);
 end
@@ -42,4 +42,3 @@ fprintf('  ||h_w(end)|| = %.4e [N·m·s]\n', norm(S.h_w(end,:)));
 
 plot_results_full(out_file_mode);
 end
-
