@@ -52,18 +52,18 @@ set_mfcn_script(model+"/FullStep", ...
 "end" + nl);
 
 % Output sizes
-set_mfcn_output_size(model+"/FullStep", "r_eci", "3");
-set_mfcn_output_size(model+"/FullStep", "B_eci", "3");
-set_mfcn_output_size(model+"/FullStep", "B_body", "3");
-set_mfcn_output_size(model+"/FullStep", "h_w", "3");
-set_mfcn_output_size(model+"/FullStep", "m", "3");
-set_mfcn_output_size(model+"/FullStep", "tau_ext", "3");
-set_mfcn_output_size(model+"/FullStep", "tau_mtq", "3");
-set_mfcn_output_size(model+"/FullStep", "tau_rw", "3");
-set_mfcn_output_size(model+"/FullStep", "q_ib", "4");
-set_mfcn_output_size(model+"/FullStep", "q_ib_des", "4");
-set_mfcn_output_size(model+"/FullStep", "w_body", "3");
-set_mfcn_output_size(model+"/FullStep", "w_des_body", "3");
+set_mfcn_output_size(model+"/FullStep", "r_eci", "3 1");
+set_mfcn_output_size(model+"/FullStep", "B_eci", "3 1");
+set_mfcn_output_size(model+"/FullStep", "B_body", "3 1");
+set_mfcn_output_size(model+"/FullStep", "h_w", "3 1");
+set_mfcn_output_size(model+"/FullStep", "m", "3 1");
+set_mfcn_output_size(model+"/FullStep", "tau_ext", "3 1");
+set_mfcn_output_size(model+"/FullStep", "tau_mtq", "3 1");
+set_mfcn_output_size(model+"/FullStep", "tau_rw", "3 1");
+set_mfcn_output_size(model+"/FullStep", "q_ib", "1 4");
+set_mfcn_output_size(model+"/FullStep", "q_ib_des", "1 4");
+set_mfcn_output_size(model+"/FullStep", "w_body", "3 1");
+set_mfcn_output_size(model+"/FullStep", "w_des_body", "3 1");
 set_mfcn_input_size(model+"/FullStep", "t", "1");
 
 % Wiring
@@ -117,4 +117,3 @@ for i = 1:numel(inData)
     end
 end
 end
-

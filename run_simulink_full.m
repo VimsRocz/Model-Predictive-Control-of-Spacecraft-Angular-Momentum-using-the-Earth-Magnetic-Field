@@ -29,18 +29,18 @@ S = struct();
 S.P = P;
 S.t = simOut.get('r_eci_log').time(:);
 
-S.r_eci = simOut.get('r_eci_log').signals.values;
-S.B_eci = simOut.get('B_eci_log').signals.values;
-S.B_body = simOut.get('B_body_log').signals.values;
-S.h_w = simOut.get('h_w_log').signals.values;
-S.m = simOut.get('m_log').signals.values;
-S.tau_ext_body = simOut.get('tau_ext_log').signals.values;
-S.tau_mtq_body = simOut.get('tau_mtq_log').signals.values;
-S.tau_rw_body = simOut.get('tau_rw_log').signals.values;
-S.q_ib = simOut.get('q_ib_log').signals.values;
-S.q_ib_des = simOut.get('q_ib_des_log').signals.values;
-S.w_body = simOut.get('w_body_log').signals.values;
-S.w_des_body = simOut.get('w_des_body_log').signals.values;
+S.r_eci = normalize_nx3(simOut.get('r_eci_log').signals.values);
+S.B_eci = normalize_nx3(simOut.get('B_eci_log').signals.values);
+S.B_body = normalize_nx3(simOut.get('B_body_log').signals.values);
+S.h_w = normalize_nx3(simOut.get('h_w_log').signals.values);
+S.m = normalize_nx3(simOut.get('m_log').signals.values);
+S.tau_ext_body = normalize_nx3(simOut.get('tau_ext_log').signals.values);
+S.tau_mtq_body = normalize_nx3(simOut.get('tau_mtq_log').signals.values);
+S.tau_rw_body = normalize_nx3(simOut.get('tau_rw_log').signals.values);
+S.q_ib = normalize_nx4(simOut.get('q_ib_log').signals.values);
+S.q_ib_des = normalize_nx4(simOut.get('q_ib_des_log').signals.values);
+S.w_body = normalize_nx3(simOut.get('w_body_log').signals.values);
+S.w_des_body = normalize_nx3(simOut.get('w_des_body_log').signals.values);
 
 S.desatMode = "simulink/" + string(P.simulink.controller);
 
@@ -58,3 +58,36 @@ fprintf('Simulink full output: %s\n', out_file);
 plot_results_full_simulink(out_file);
 end
 
+function A = normalize_nx3(A)
+% Ensure A is Nx3
+A = squeeze(A);
+if isempty(A)
+    A = zeros(0,3);
+    return;
+end
+if size(A,2) == 3
+    return;
+end
+if size(A,1) == 3
+    A = A.';
+    return;
+end
+error('Expected Nx3 or 3xN array after squeeze. Got %dx%d.', size(A,1), size(A,2));
+end
+
+function A = normalize_nx4(A)
+% Ensure A is Nx4
+A = squeeze(A);
+if isempty(A)
+    A = zeros(0,4);
+    return;
+end
+if size(A,2) == 4
+    return;
+end
+if size(A,1) == 4
+    A = A.';
+    return;
+end
+error('Expected Nx4 or 4xN array after squeeze. Got %dx%d.', size(A,1), size(A,2));
+end
