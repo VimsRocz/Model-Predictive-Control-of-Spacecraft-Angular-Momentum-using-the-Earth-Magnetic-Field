@@ -1,7 +1,7 @@
 function compare_matlab_vs_simulink()
 %COMPARE_MATLAB_VS_SIMULINK Compare MATLAB and Simulink outputs step-by-step.
 
-repo_root = fileparts(fileparts(mfilename('fullpath')));
+repo_root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
 matlab_proc = fullfile(repo_root, 'MATLAB', 'Processing');
 addpath(matlab_proc);
 addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));

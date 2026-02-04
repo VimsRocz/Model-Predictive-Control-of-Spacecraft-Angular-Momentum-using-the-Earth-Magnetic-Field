@@ -70,6 +70,12 @@ if isfield(P,'viz') && isfield(P.viz,'interactive') && P.viz.interactive
     end
 end
 
+% Click-to-focus: set camera target to the point under the cursor.
+try
+    fig.WindowButtonDownFcn = @(~,~) set_camtarget_to_cursor(ax);
+catch
+end
+
 % Sun (optional)
 if isfield(P,'viz') && isfield(P.viz,'show_sun') && P.viz.show_sun
     sun_dir = [1;0;0];
@@ -129,23 +135,27 @@ satSize_m = Re * satSizeRe;
 satPatch = patch(ax, 'Vertices', zeros(8,3), 'Faces', F, ...
     'FaceColor',[0.2 0.2 0.2], 'FaceAlpha', 0.85, 'EdgeColor',[1 1 1]*0.9, ...
     'LineWidth', 0.4, 'DisplayName','satellite');
+try, satPatch.Clipping = 'off'; end
 
 % Plane ⟂B patch
 planePatch = patch(ax, 'XData',nan(1,4), 'YData',nan(1,4), 'ZData',nan(1,4), [0.6 0.6 0.6], ...
     'FaceAlpha', 0.12, 'EdgeColor',[0.5 0.5 0.5], 'LineStyle','--', ...
     'DisplayName','plane ⟂B');
+try, planePatch.Clipping = 'off'; end
 
 % Body axes quivers
 qbx = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.85 0.33 0.10], 'LineWidth', 1.0, 'MaxHeadSize', 0.5, 'DisplayName','body x');
 qby = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.25 0.6 0.2],  'LineWidth', 1.0, 'MaxHeadSize', 0.5, 'DisplayName','body y');
 qbz = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.1 0.3 0.8],   'LineWidth', 1.0, 'MaxHeadSize', 0.5, 'DisplayName','body z');
 qbx.AutoScale = 'off'; qby.AutoScale = 'off'; qbz.AutoScale = 'off';
+try, qbx.Clipping = 'off'; qby.Clipping = 'off'; qbz.Clipping = 'off'; end
 
 % Magnetometer component arrows (B_body along body axes)
 qmx = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.85 0.33 0.10], 'LineWidth', 1.2, 'LineStyle','--', 'MaxHeadSize', 0.6, 'DisplayName','B_x (mag)');
 qmy = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.25 0.6 0.2],  'LineWidth', 1.2, 'LineStyle','--', 'MaxHeadSize', 0.6, 'DisplayName','B_y (mag)');
 qmz = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.1 0.3 0.8],   'LineWidth', 1.2, 'LineStyle','--', 'MaxHeadSize', 0.6, 'DisplayName','B_z (mag)');
 qmx.AutoScale = 'off'; qmy.AutoScale = 'off'; qmz.AutoScale = 'off';
+try, qmx.Clipping = 'off'; qmy.Clipping = 'off'; qmz.Clipping = 'off'; end
 
 % Controller vectors quivers (legend entries)
 Lvec = 0.28 * Re;
@@ -156,6 +166,10 @@ qtau = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.47 0.67 0.19], 'LineWidth', 1.3, 
 qtauPerp = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0 0 0], 'LineWidth', 1.2, 'LineStyle','--', 'MaxHeadSize', 0.7, 'DisplayName','tau_{des,⊥B}');
 qtauPar  = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.7 0 0.7], 'LineWidth', 1.2, 'LineStyle',':',  'MaxHeadSize', 0.7, 'DisplayName','tau_{des,∥B}');
 qB.AutoScale = 'off'; qh.AutoScale = 'off'; qm.AutoScale = 'off'; qtau.AutoScale = 'off'; qtauPerp.AutoScale = 'off'; qtauPar.AutoScale = 'off';
+try
+    qB.Clipping = 'off'; qh.Clipping = 'off'; qm.Clipping = 'off'; qtau.Clipping = 'off';
+    qtauPerp.Clipping = 'off'; qtauPar.Clipping = 'off';
+end
 
 legend(ax, 'Location','northeastoutside');
 
@@ -184,6 +198,7 @@ hud = annotation(fig,'textbox',[0.02 0.02 0.56 0.22], 'String', '', ...
 % --- Controls ---
 frameIdx = 1;
 speedFactor = 1;
+followSat = true;
 
 btnPlay = uicontrol(fig, 'Style','togglebutton', 'String','Play', ...
     'Units','pixels', 'Position',[20 20 70 28], 'Callback', @onPlayToggle);
@@ -195,8 +210,13 @@ uicontrol(fig, 'Style','text', 'String','Speed', 'Units','pixels', ...
 popupSpeed = uicontrol(fig, 'Style','popupmenu', 'String',{'0.5x','1x','2x','4x'}, ...
     'Units','pixels', 'Position',[230 20 70 28], 'Callback', @onSpeedChange, 'Value', 2);
 
+chkFollow = uicontrol(fig, 'Style','checkbox', 'String','Follow sat', 'Value', 1, ...
+    'Units','pixels', 'Position',[310 22 90 24], 'BackgroundColor','w', 'Callback', @onFollowChange);
+btnReset = uicontrol(fig, 'Style','pushbutton', 'String','Reset view', ...
+    'Units','pixels', 'Position',[405 20 90 28], 'Callback', @onResetView);
+
 slider = uicontrol(fig, 'Style','slider', 'Min',1, 'Max',max(2,nFrames), 'Value',1, ...
-    'Units','pixels', 'Position',[320 20 820 28], 'Callback', @onSliderMove);
+    'Units','pixels', 'Position',[505 20 635 28], 'Callback', @onSliderMove);
 if nFrames > 1
     slider.SliderStep = [1/(nFrames-1) min(10, nFrames-1)/(nFrames-1)];
 end
@@ -234,6 +254,15 @@ function onSpeedChange(~, ~)
         case 4, speedFactor = 4;
         otherwise, speedFactor = 1;
     end
+end
+
+function onFollowChange(~, ~)
+    followSat = logical(chkFollow.Value);
+end
+
+function onResetView(~, ~)
+    view(ax, 35, 20);
+    camproj(ax,'perspective');
 end
 
 function onSliderMove(~, ~)
@@ -275,6 +304,16 @@ function update_frame(iFrame)
     qk = S.q_ib(k,:);
     C_bi = quat2dcm(qk);
     C_ib = C_bi.';
+
+    % Keep satellite centered when zooming/rotating (prevents disappearing).
+    if followSat
+        try
+            camOffset = ax.CameraPosition - ax.CameraTarget;
+            ax.CameraTarget = r.';
+            ax.CameraPosition = r.' + camOffset;
+        catch
+        end
+    end
 
     % Satellite cube
     V = (C_ib * (satSize_m * Vb)) + r;
@@ -357,6 +396,14 @@ function update_frame(iFrame)
     txtTime.String = sprintf('t = %.1f s  |  mode=%s  |  bfield=%s', t_s(k), string(S.desatMode), bfield_label(P));
 
     drawnow limitrate;
+end
+end
+
+function set_camtarget_to_cursor(ax)
+try
+    cp = ax.CurrentPoint;
+    ax.CameraTarget = cp(1,1:3);
+catch
 end
 end
 

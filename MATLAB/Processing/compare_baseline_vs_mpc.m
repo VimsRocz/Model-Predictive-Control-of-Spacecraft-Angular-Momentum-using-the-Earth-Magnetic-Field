@@ -7,7 +7,7 @@ function compare_baseline_vs_mpc(P)
 %
 % If P is provided, it is used only for labeling (files are loaded from disk).
 
-repo_root = fileparts(fileparts(mfilename('fullpath')));
+repo_root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
 matlab_proc = fullfile(repo_root, 'MATLAB', 'Processing');
 addpath(matlab_proc);
 addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));

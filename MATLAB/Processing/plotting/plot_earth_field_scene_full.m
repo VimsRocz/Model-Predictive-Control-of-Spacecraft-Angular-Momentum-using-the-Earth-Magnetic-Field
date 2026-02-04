@@ -51,6 +51,12 @@ if isfield(P,'viz') && isfield(P.viz,'interactive') && P.viz.interactive
     end
 end
 
+% Click-to-focus: set camera target to the point under the cursor.
+try
+    fig.WindowButtonDownFcn = @(~,~) set_camtarget_to_cursor(ax);
+catch
+end
+
 % Sun (optional)
 if isfield(P,'viz') && isfield(P.viz,'show_sun') && P.viz.show_sun
     sun_dir = [1;0;0];
@@ -214,9 +220,10 @@ end
 function plot_vec(ax, r, v, L, color, name, lineStyle, hv)
 [u, ok] = unit_vec(v);
 if ~ok; u = [0;0;0]; end
-quiver3(ax, r(1), r(2), r(3), L*u(1), L*u(2), L*u(3), 0, ...
+h = quiver3(ax, r(1), r(2), r(3), L*u(1), L*u(2), L*u(3), 0, ...
     'Color',color, 'LineWidth', 1.25, 'MaxHeadSize', 0.7, ...
     'LineStyle',lineStyle, 'HandleVisibility', hv, 'DisplayName', name);
+try, h.Clipping = 'off'; end
 end
 
 function draw_perp_plane(ax, r, n_hat, halfSize, showLegend)
@@ -255,15 +262,16 @@ function draw_body_axes(ax, r, C_ib, L, hv)
 % Draw body axes triad in ECI (x=red,y=green,z=blue)
 
 ex = C_ib(:,1); ey = C_ib(:,2); ez = C_ib(:,3);
-quiver3(ax, r(1), r(2), r(3), L*ex(1), L*ex(2), L*ex(3), 0, ...
+hx = quiver3(ax, r(1), r(2), r(3), L*ex(1), L*ex(2), L*ex(3), 0, ...
     'Color',[0.85 0.33 0.10], 'LineWidth', 1.0, 'MaxHeadSize', 0.5, ...
     'HandleVisibility', hv, 'DisplayName','body x');
-quiver3(ax, r(1), r(2), r(3), L*ey(1), L*ey(2), L*ey(3), 0, ...
+hy = quiver3(ax, r(1), r(2), r(3), L*ey(1), L*ey(2), L*ey(3), 0, ...
     'Color',[0.25 0.6 0.2], 'LineWidth', 1.0, 'MaxHeadSize', 0.5, ...
     'HandleVisibility', hv, 'DisplayName','body y');
-quiver3(ax, r(1), r(2), r(3), L*ez(1), L*ez(2), L*ez(3), 0, ...
+hz = quiver3(ax, r(1), r(2), r(3), L*ez(1), L*ez(2), L*ez(3), 0, ...
     'Color',[0.1 0.3 0.8], 'LineWidth', 1.0, 'MaxHeadSize', 0.5, ...
     'HandleVisibility', hv, 'DisplayName','body z');
+try, hx.Clipping = 'off'; hy.Clipping = 'off'; hz.Clipping = 'off'; end
 end
 
 function draw_sat_cube(ax, r_eci, q_ib, size_m, color, alpha, name)
@@ -294,9 +302,18 @@ F = [ ...
     3 4 8 7;
     4 1 5 8 ];
 
-patch(ax, 'Vertices', V, 'Faces', F, ...
+h = patch(ax, 'Vertices', V, 'Faces', F, ...
     'FaceColor', color, 'FaceAlpha', alpha, 'EdgeColor',[1 1 1]*0.9, ...
     'LineWidth', 0.4, 'DisplayName', name);
+try, h.Clipping = 'off'; end
+end
+
+function set_camtarget_to_cursor(ax)
+try
+    cp = ax.CurrentPoint;
+    ax.CameraTarget = cp(1,1:3);
+catch
+end
 end
 
 function s = bfield_label(P)

@@ -58,6 +58,12 @@ if isfield(P,'viz') && isfield(P.viz,'interactive') && P.viz.interactive
     end
 end
 
+% Click-to-focus: set camera target to the point under the cursor.
+try
+    fig.WindowButtonDownFcn = @(~,~) set_camtarget_to_cursor(ax);
+catch
+end
+
 % Sun (optional)
 if isfield(P,'viz') && isfield(P.viz,'show_sun') && P.viz.show_sun
     sun_dir = [1;0;0];
@@ -195,34 +201,40 @@ if showLegend
 end
 
 if okB
-    quiver3(ax, r0(1), r0(2), r0(3), L*Bv(1), L*Bv(2), L*Bv(3), 0, ...
+    h = quiver3(ax, r0(1), r0(2), r0(3), L*Bv(1), L*Bv(2), L*Bv(3), 0, ...
         'Color',[0.0 0.45 0.74], 'LineWidth', 1.3, 'MaxHeadSize', 0.7, ...
         'HandleVisibility', hv, 'DisplayName','B');
+    try, h.Clipping = 'off'; end
 end
 if okx
-    quiver3(ax, r0(1), r0(2), r0(3), L*xv(1), L*xv(2), L*xv(3), 0, ...
+    h = quiver3(ax, r0(1), r0(2), r0(3), L*xv(1), L*xv(2), L*xv(3), 0, ...
         'Color',[0.35 0.35 0.35], 'LineWidth', 1.2, 'MaxHeadSize', 0.7, ...
         'HandleVisibility', hv, 'DisplayName','x (momentum error)');
+    try, h.Clipping = 'off'; end
 end
 if okm
-    quiver3(ax, r0(1), r0(2), r0(3), L*mv(1), L*mv(2), L*mv(3), 0, ...
+    h = quiver3(ax, r0(1), r0(2), r0(3), L*mv(1), L*mv(2), L*mv(3), 0, ...
         'Color',[0.85 0.33 0.10], 'LineWidth', 1.3, 'MaxHeadSize', 0.7, ...
         'HandleVisibility', hv, 'DisplayName','m (dipole)');
+    try, h.Clipping = 'off'; end
 end
 if okt
-    quiver3(ax, r0(1), r0(2), r0(3), L*tv(1), L*tv(2), L*tv(3), 0, ...
+    h = quiver3(ax, r0(1), r0(2), r0(3), L*tv(1), L*tv(2), L*tv(3), 0, ...
         'Color',[0.47 0.67 0.19], 'LineWidth', 1.3, 'MaxHeadSize', 0.7, ...
         'HandleVisibility', hv, 'DisplayName','\tau_{mtq} = m×B');
+    try, h.Clipping = 'off'; end
 end
 if okdp
-    quiver3(ax, r0(1), r0(2), r0(3), L*dpv(1), L*dpv(2), L*dpv(3), 0, ...
+    h = quiver3(ax, r0(1), r0(2), r0(3), L*dpv(1), L*dpv(2), L*dpv(3), 0, ...
         'Color',[0 0 0], 'LineWidth', 1.2, 'LineStyle','--', 'MaxHeadSize', 0.7, ...
         'HandleVisibility', hv, 'DisplayName','\tau_{des,\perp B}');
+    try, h.Clipping = 'off'; end
 end
 if okda
-    quiver3(ax, r0(1), r0(2), r0(3), L*dav(1), L*dav(2), L*dav(3), 0, ...
+    h = quiver3(ax, r0(1), r0(2), r0(3), L*dav(1), L*dav(2), L*dav(3), 0, ...
         'Color',[0.7 0 0.7], 'LineWidth', 1.2, 'LineStyle',':', 'MaxHeadSize', 0.7, ...
         'HandleVisibility', hv, 'DisplayName','\tau_{des,\parallel B}');
+    try, h.Clipping = 'off'; end
 end
 
 text(ax, r0(1), r0(2), r0(3), ['  ' tag], 'Color','k', 'FontWeight','bold');
@@ -303,4 +315,12 @@ if size(A,1) == 3
     return;
 end
 error('Expected Nx3 or 3xN array. Got %dx%d.', size(A,1), size(A,2));
+end
+
+function set_camtarget_to_cursor(ax)
+try
+    cp = ax.CurrentPoint;
+    ax.CameraTarget = cp(1,1:3);
+catch
+end
 end

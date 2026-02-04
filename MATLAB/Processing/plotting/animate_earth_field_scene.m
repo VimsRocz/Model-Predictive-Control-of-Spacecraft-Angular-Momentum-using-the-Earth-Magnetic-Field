@@ -75,6 +75,12 @@ if isfield(P,'viz') && isfield(P.viz,'interactive') && P.viz.interactive
     end
 end
 
+% Click-to-focus: set camera target to the point under the cursor.
+try
+    fig.WindowButtonDownFcn = @(~,~) set_camtarget_to_cursor(ax);
+catch
+end
+
 % Sun (optional)
 if isfield(P,'viz') && isfield(P.viz,'show_sun') && P.viz.show_sun
     sun_dir = [1;0;0];
@@ -127,11 +133,16 @@ scatter3(ax, r_eci(idx_anim(end),1), r_eci(idx_anim(end),2), r_eci(idx_anim(end)
 sat = scatter3(ax, r_eci(idx_anim(1),1), r_eci(idx_anim(1),2), r_eci(idx_anim(1),3), 160, 's', ...
     'MarkerFaceColor',[0.2 0.2 0.2], 'MarkerEdgeColor','w', 'LineWidth', 0.9, ...
     'DisplayName','satellite');
+try, sat.Clipping = 'off'; end
 
 % Vector handles (only these appear in the legend)
 Lvec = 0.25 * Re;
 [qB, qx, qm, qtau, qtauPerp, qtauPar] = init_vector_quivers(ax);
 legend(ax, 'Location','northeastoutside');
+try
+    qB.Clipping='off'; qx.Clipping='off'; qm.Clipping='off'; qtau.Clipping='off';
+    qtauPerp.Clipping='off'; qtauPar.Clipping='off';
+end
 
 % Lighting (optional)
 if isfield(P,'viz') && isfield(P.viz,'use_lighting') && P.viz.use_lighting
@@ -158,6 +169,7 @@ xlabel(ax,'X [m]'); ylabel(ax,'Y [m]'); zlabel(ax,'Z [m]');
 % --- Controls ---
 frameIdx = 1;
 speedFactor = 1; % frames per tick
+followSat = true;
 
 btnPlay = uicontrol(fig, 'Style','togglebutton', 'String','Play', ...
     'Units','pixels', 'Position',[20 20 70 28], 'Callback', @onPlayToggle);
@@ -169,8 +181,13 @@ uicontrol(fig, 'Style','text', 'String','Speed', 'Units','pixels', ...
 popupSpeed = uicontrol(fig, 'Style','popupmenu', 'String',{'0.5x','1x','2x','4x'}, ...
     'Units','pixels', 'Position',[230 20 70 28], 'Callback', @onSpeedChange, 'Value', 2);
 
+chkFollow = uicontrol(fig, 'Style','checkbox', 'String','Follow sat', 'Value', 1, ...
+    'Units','pixels', 'Position',[310 22 90 24], 'BackgroundColor','w', 'Callback', @onFollowChange);
+btnReset = uicontrol(fig, 'Style','pushbutton', 'String','Reset view', ...
+    'Units','pixels', 'Position',[405 20 90 28], 'Callback', @onResetView);
+
 slider = uicontrol(fig, 'Style','slider', 'Min',1, 'Max',max(2,nFrames), 'Value',1, ...
-    'Units','pixels', 'Position',[320 20 820 28], 'Callback', @onSliderMove);
+    'Units','pixels', 'Position',[505 20 635 28], 'Callback', @onSliderMove);
 if nFrames > 1
     slider.SliderStep = [1/(nFrames-1) min(10, nFrames-1)/(nFrames-1)];
 end
@@ -211,6 +228,15 @@ function onSpeedChange(~, ~)
         case 4, speedFactor = 4;
         otherwise, speedFactor = 1;
     end
+end
+
+function onFollowChange(~, ~)
+    followSat = logical(chkFollow.Value);
+end
+
+function onResetView(~, ~)
+    view(ax, 35, 20);
+    camproj(ax,'perspective');
 end
 
 function onSliderMove(~, ~)
@@ -258,6 +284,16 @@ function update_frame(iFrame)
     sat.YData = r(2);
     sat.ZData = r(3);
 
+    % Keep satellite centered when zooming/rotating (prevents disappearing).
+    if followSat
+        try
+            camOffset = ax.CameraPosition - ax.CameraTarget;
+            ax.CameraTarget = r;
+            ax.CameraPosition = r + camOffset;
+        catch
+        end
+    end
+
     % Controller vectors
     xk = x(k,:);
     mk = m(k,:);
@@ -301,6 +337,14 @@ function update_frame(iFrame)
     txtTime.String = sprintf('t = %.1f s', t_s(k));
 
     drawnow limitrate;
+end
+end
+
+function set_camtarget_to_cursor(ax)
+try
+    cp = ax.CurrentPoint;
+    ax.CameraTarget = cp(1,1:3);
+catch
 end
 end
 
