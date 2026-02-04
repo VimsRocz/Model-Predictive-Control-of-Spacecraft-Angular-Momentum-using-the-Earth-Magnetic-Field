@@ -89,6 +89,19 @@ fprintf('  x(0) = [% .4e % .4e % .4e]\n', x0_sim(1), x0_sim(2), x0_sim(3));
 fprintf('  m(0) = [% .4e % .4e % .4e]\n', m0_sim(1), m0_sim(2), m0_sim(3));
 
 plot_results_simulink(out_file);
+
+% Auto-animate momentum-only scene if enabled
+if isfield(P,'viz') && isfield(P.viz,'auto_animate_momentum') && P.viz.auto_animate_momentum
+    try
+        S = load(out_file);
+        t = S.x_log.time(:);
+        x = S.x_log.signals.values;
+        m = S.m_log.signals.values;
+        B = S.B_log.signals.values;
+        animate_earth_field_scene(P, t, x, m, B, "Simulink/momentum");
+    catch
+    end
+end
 end
 
 function run_simulink_full_internal(P)

@@ -66,9 +66,12 @@ P.viz.sun_distance_Re = 6;       % distance of Sun from Earth center (in Earth r
 P.viz.sun_radius_Re = 1.5;       % Sun size (in Earth radii) for visualization
 P.viz.sun_dir_eci = [1; 0.2; 0]; % Sun direction in ECI (unit vector is derived)
 P.viz.auto_animate_full = true;  % auto-run 3D full animation after run
+P.viz.auto_animate_momentum = true; % auto-run 3D momentum-only animation after run
 P.viz.interactive = true;        % enable rotate/zoom/pan helpers
 P.viz.zoom_speed = 0.12;         % scroll-wheel zoom sensitivity
 P.viz.use_lighting = true;       % add lighting for 3D realism
+P.viz.earth_texture = true;      % use built-in topo texture if available
+P.viz.earth_res = 100;           % sphere resolution (higher = smoother, slower)
 
 % --- Attitude control + reaction wheel limits (full simulation) ---
 P.adcs.Kp = 0.05;              % PD attitude gain (unitless)

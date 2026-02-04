@@ -48,6 +48,17 @@ switch plant
         end
     case "momentum"
         main_run_sim(ctrl, P);
+        if isfield(P,'viz') && isfield(P.viz,'auto_animate_momentum') && P.viz.auto_animate_momentum
+            try
+                f = fullfile(repo_root, 'MATLAB', 'Output', 'momentum', 'sim_out_matlab.mat');
+                if exist(f,'file')
+                    S = load(f);
+                    t = (0:size(S.x,2)-1) * S.P.Ts;
+                    animate_earth_field_scene(S.P, t, S.x.', S.m.', S.B_log.', "MATLAB/momentum/" + string(ctrl));
+                end
+            catch
+            end
+        end
     otherwise
         error("Unknown P.plant.model '%s'. Use 'full' or 'momentum'.", plant);
 end
