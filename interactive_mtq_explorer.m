@@ -148,6 +148,7 @@ end
 
 function P = readP()
     P = params_default(); % start from known-good defaults
+    P.simulink.controller = string(ctrlMode.Value); % lock Simulink controller to MATLAB selection
     P.env.bfield_model = string(bfieldModel.Value);
     P.env.igrf_decimal_year = igrfYear.Value;
     P.orbit.alt_m = alt_km.Value * 1e3;
