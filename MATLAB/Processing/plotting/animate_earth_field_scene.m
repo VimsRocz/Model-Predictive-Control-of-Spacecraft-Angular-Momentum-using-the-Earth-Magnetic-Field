@@ -21,13 +21,21 @@ t_s = t_s(:);
 
 N = numel(t_s);
 
-% Orbit marker count (user-requested default: 36)
+% Orbit sample selection (full rotation or markers)
 nMarkers = 36;
 if isfield(P, "viz") && isfield(P.viz, "nOrbitMarkers")
     nMarkers = max(2, round(P.viz.nOrbitMarkers));
 end
-
-idx_anim = unique(round(linspace(1, N, nMarkers)));
+use_all = isfield(P,"viz") && isfield(P.viz,"animate_all_steps") && P.viz.animate_all_steps;
+stride = 1;
+if isfield(P,"viz") && isfield(P.viz,"animate_stride")
+    stride = max(1, round(P.viz.animate_stride));
+end
+if use_all
+    idx_anim = 1:stride:N;
+else
+    idx_anim = unique(round(linspace(1, N, nMarkers)));
+end
 nFrames = numel(idx_anim);
 
 % Precompute orbit in ECI
@@ -44,17 +52,54 @@ fig.Position(3:4) = [1400 900];
 ax = axes(fig); %#ok<LAXES>
 hold(ax,'on'); grid(ax,'on'); axis(ax,'equal');
 view(ax, 35, 20);
+axis(ax,'vis3d');
+daspect(ax,[1 1 1]);
+camproj(ax,'perspective');
+if isfield(P,'viz') && isfield(P.viz,'interactive') && P.viz.interactive
+    try, rotate3d(fig,'on'); end
+    try, pan(fig,'on'); end
+    try, zoom(fig,'on'); end
+    if isfield(P.viz,'zoom_speed')
+        zspeed = double(P.viz.zoom_speed);
+    else
+        zspeed = 0.12;
+    end
+    fig.WindowScrollWheelFcn = @(~,evt) camzoom(ax, 1 + zspeed * sign(evt.VerticalScrollCount));
+    try, cameratoolbar(fig,'Show'); end
+    try
+        ax.Toolbar.Visible = 'on';
+        axtoolbar(ax, {'rotate','pan','zoomin','zoomout','restoreview'});
+    catch
+    end
+end
 
-try
-    ax.Toolbar.Visible = 'off';
-catch
+% Sun (optional)
+if isfield(P,'viz') && isfield(P.viz,'show_sun') && P.viz.show_sun
+    sun_dir = [1;0;0];
+    if isfield(P.viz,'sun_dir_eci') && numel(P.viz.sun_dir_eci) == 3
+        sun_dir = P.viz.sun_dir_eci(:);
+    end
+    sun_dir = sun_dir / max(norm(sun_dir), 1e-12);
+    sun_dist = 20;
+    if isfield(P.viz,'sun_distance_Re'); sun_dist = double(P.viz.sun_distance_Re); end
+    sun_rad = 2.5;
+    if isfield(P.viz,'sun_radius_Re'); sun_rad = double(P.viz.sun_radius_Re); end
+    sun_pos = (sun_dist * Re) * sun_dir;
+    [xs, ys, zs] = sphere(40);
+    surf(ax, sun_pos(1)+sun_rad*Re*xs, sun_pos(2)+sun_rad*Re*ys, sun_pos(3)+sun_rad*Re*zs, ...
+        'FaceColor',[0.95 0.7 0.1], 'FaceAlpha',0.9, 'EdgeColor','none', ...
+        'FaceLighting','gouraud', 'SpecularStrength',0.3, 'HandleVisibility','off');
+    quiver3(ax, 0,0,0, sun_pos(1), sun_pos(2), sun_pos(3), 0, ...
+        'Color',[0.95 0.7 0.1], 'LineWidth',1.1, 'MaxHeadSize',0.6, ...
+        'HandleVisibility','off');
 end
 
 % Earth sphere
 [xe, ye, ze] = sphere(60);
-surf(ax, Re*xe, Re*ye, Re*ze, ...
-    'FaceColor',[0.15 0.35 0.7], 'FaceAlpha',0.25, 'EdgeColor','none', ...
-    'HandleVisibility','off');
+earthSurf = surf(ax, Re*xe, Re*ye, Re*ze, ...
+    'FaceColor',[0.15 0.35 0.7], 'FaceAlpha',0.35, 'EdgeColor','none', ...
+    'FaceLighting','gouraud', 'SpecularStrength',0.2, 'HandleVisibility','off');
+try, shading(ax,'interp'); end
 
 % Dipole field lines + direction arrows
 plot_dipole_field_lines(ax, Re, P);
@@ -89,6 +134,20 @@ sat = scatter3(ax, r_eci(idx_anim(1),1), r_eci(idx_anim(1),2), r_eci(idx_anim(1)
 Lvec = 0.25 * Re;
 [qB, qx, qm, qtau, qtauPerp, qtauPar] = init_vector_quivers(ax);
 legend(ax, 'Location','northeastoutside');
+
+% Lighting (optional)
+if isfield(P,'viz') && isfield(P.viz,'use_lighting') && P.viz.use_lighting
+    material(earthSurf, 'dull');
+    try
+        if exist('sun_pos','var')
+            camlight(ax, sun_pos(1), sun_pos(2), sun_pos(3));
+        else
+            camlight(ax, 'headlight');
+        end
+        lighting(ax, 'gouraud');
+    catch
+    end
+end
 
 % HUD annotation with magnitudes
 hud = annotation(fig,'textbox',[0.02 0.02 0.52 0.20], 'String', '', ...
@@ -233,11 +292,13 @@ function update_frame(iFrame)
         'Frame %d/%d  (k=%d)\n' ...
         't = %.1f s\n' ...
         '||x|| = %.3e  [N·m·s]\n' ...
-        '||B|| = %.1f  [µT]\n' ...
+        'B = [%.1f %.1f %.1f] µT,  ||B|| = %.1f µT\n' ...
         '||m|| = %.3f  [A·m^2]\n' ...
-        '||tau_{mtq}|| = %.2f  [µN·m]\n' ...
+        'tau_{mtq} = [%.2f %.2f %.2f] µN·m,  ||tau_{mtq}|| = %.2f µN·m\n' ...
         '\nNote: All vectors are in ECI/inertial (simplified).'], ...
-        iFrame, nFrames, k, t_s(k), xmag, Bmag_uT, mmag, taumag_uNm);
+        iFrame, nFrames, k, t_s(k), xmag, ...
+        1e6*Bk(1), 1e6*Bk(2), 1e6*Bk(3), Bmag_uT, ...
+        mmag, 1e6*tau_mtq(1), 1e6*tau_mtq(2), 1e6*tau_mtq(3), taumag_uNm);
 
     txtTime.String = sprintf('t = %.1f s', t_s(k));
 

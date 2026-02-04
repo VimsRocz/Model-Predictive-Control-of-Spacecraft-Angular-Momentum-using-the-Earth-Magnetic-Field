@@ -19,6 +19,8 @@ P.viz.show_sun = true;          % show Sun in 3D scene
 P.viz.animate_all_steps = true; % full rotation animation
 P.viz.animate_stride = 1;       % use >1 to speed up animation
 P.viz.auto_animate_full = true; % auto-play after run
+P.viz.interactive = true;       % rotate/pan/zoom tools
+P.viz.use_lighting = true;      % 3D lighting for Earth/Sun
 
 run_matlab(P);
 ```

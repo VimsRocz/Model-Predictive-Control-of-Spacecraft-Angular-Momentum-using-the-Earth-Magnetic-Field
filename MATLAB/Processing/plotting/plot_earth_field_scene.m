@@ -38,9 +38,25 @@ fig = figure('Color','w','Name',sprintf('Earth / B-field / MTQ Scene (%s)', labe
 fig.Position(3:4) = [1400 900];
 ax = axes(fig); %#ok<LAXES>
 hold(ax,'on'); grid(ax,'on'); axis(ax,'equal');
-try
-    ax.Toolbar.Visible = 'off';
-catch
+axis(ax,'vis3d');
+daspect(ax,[1 1 1]);
+camproj(ax,'perspective');
+if isfield(P,'viz') && isfield(P.viz,'interactive') && P.viz.interactive
+    try, rotate3d(fig,'on'); end
+    try, pan(fig,'on'); end
+    try, zoom(fig,'on'); end
+    if isfield(P.viz,'zoom_speed')
+        zspeed = double(P.viz.zoom_speed);
+    else
+        zspeed = 0.12;
+    end
+    fig.WindowScrollWheelFcn = @(~,evt) camzoom(ax, 1 + zspeed * sign(evt.VerticalScrollCount));
+    try, cameratoolbar(fig,'Show'); end
+    try
+        ax.Toolbar.Visible = 'on';
+        axtoolbar(ax, {'rotate','pan','zoomin','zoomout','restoreview'});
+    catch
+    end
 end
 
 % Sun (optional)
@@ -57,8 +73,8 @@ if isfield(P,'viz') && isfield(P.viz,'show_sun') && P.viz.show_sun
     sun_pos = (sun_dist * Re) * sun_dir;
     [xs, ys, zs] = sphere(40);
     surf(ax, sun_pos(1)+sun_rad*Re*xs, sun_pos(2)+sun_rad*Re*ys, sun_pos(3)+sun_rad*Re*zs, ...
-        'FaceColor',[0.95 0.7 0.1], 'FaceAlpha',0.85, 'EdgeColor','none', ...
-        'HandleVisibility','off');
+        'FaceColor',[0.95 0.7 0.1], 'FaceAlpha',0.9, 'EdgeColor','none', ...
+        'FaceLighting','gouraud', 'SpecularStrength',0.3, 'HandleVisibility','off');
     quiver3(ax, 0,0,0, sun_pos(1), sun_pos(2), sun_pos(3), 0, ...
         'Color',[0.95 0.7 0.1], 'LineWidth',1.1, 'MaxHeadSize',0.6, ...
         'HandleVisibility','off');
@@ -66,9 +82,10 @@ end
 
 % Earth sphere
 [xe, ye, ze] = sphere(60);
-surf(ax, Re*xe, Re*ye, Re*ze, ...
-    'FaceColor',[0.15 0.35 0.7], 'FaceAlpha',0.25, 'EdgeColor','none', ...
-    'HandleVisibility','off');
+earthSurf = surf(ax, Re*xe, Re*ye, Re*ze, ...
+    'FaceColor',[0.15 0.35 0.7], 'FaceAlpha',0.35, 'EdgeColor','none', ...
+    'FaceLighting','gouraud', 'SpecularStrength',0.2, 'HandleVisibility','off');
+try, shading(ax,'interp'); end
 
 % A few ideal dipole field lines (analytic r = L sin^2(theta))
 plot_dipole_field_lines(ax, Re, P);
@@ -102,6 +119,20 @@ xlabel(ax,'X [m]'); ylabel(ax,'Y [m]'); zlabel(ax,'Z [m]');
 view(ax, 35, 20);
 
 legend(ax, 'Location','northeastoutside');
+
+% Lighting (optional)
+if isfield(P,'viz') && isfield(P.viz,'use_lighting') && P.viz.use_lighting
+    material(earthSurf, 'dull');
+    try
+        if exist('sun_pos','var')
+            camlight(ax, sun_pos(1), sun_pos(2), sun_pos(3));
+        else
+            camlight(ax, 'headlight');
+        end
+        lighting(ax, 'gouraud');
+    catch
+    end
+end
 
 x0n = norm(x(k0,:)); xfn = norm(x(kf,:));
 
