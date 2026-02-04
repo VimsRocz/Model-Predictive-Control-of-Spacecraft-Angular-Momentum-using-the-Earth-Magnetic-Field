@@ -18,11 +18,11 @@ addpath(fullfile(repo_root, 'plotting'));
 
 P0 = params_default();
 
-fig = uifigure('Name','MTQ Explorer (Baseline vs MPC + Visualization)', 'Position',[100 100 590 820]);
-gl = uigridlayout(fig, [27 2]);
+fig = uifigure('Name','MTQ Explorer (Baseline vs MPC + Visualization)', 'Position',[100 100 620 920]);
+gl = uigridlayout(fig, [32 2]);
 gl.ColumnWidth = {190,'1x'};
-gl.RowHeight = repmat({32}, 1, 26);
-gl.RowHeight{27} = '1x';
+gl.RowHeight = repmat({32}, 1, 31);
+gl.RowHeight{32} = '1x';
 gl.Padding = [12 12 12 12];
 
 % --- Parameter fields ---
@@ -34,6 +34,9 @@ ctrlMode = uidropdown(gl, 'Items',{'baseline','mpc'}, 'Value','baseline');
 
 uilabel(gl, 'Text','B-field model', 'HorizontalAlignment','left');
 bfieldModel = uidropdown(gl, 'Items',{'igrf','dipole'}, 'Value', char(P0.env.bfield_model));
+
+uilabel(gl, 'Text','IGRF decimal year', 'HorizontalAlignment','left');
+igrfYear = uieditfield(gl, 'numeric', 'Value', P0.env.igrf_decimal_year, 'Limits',[1900 2100]);
 
 uilabel(gl, 'Text','Orbit altitude [km]', 'HorizontalAlignment','left');
 alt_km = uieditfield(gl, 'numeric', 'Value', P0.orbit.alt_m/1e3, 'Limits',[100 4000], 'LowerLimitInclusive','on');
@@ -83,40 +86,52 @@ x0y = uieditfield(gl, 'numeric', 'Value', P0.x0(2));
 uilabel(gl, 'Text','Initial x0_z [N·m·s]', 'HorizontalAlignment','left');
 x0z = uieditfield(gl, 'numeric', 'Value', P0.x0(3));
 
+uilabel(gl, 'Text','ADCS Kp (full)', 'HorizontalAlignment','left');
+adcsKp = uieditfield(gl, 'numeric', 'Value', P0.adcs.Kp, 'Limits',[0 10]);
+
+uilabel(gl, 'Text','ADCS Kd (full)', 'HorizontalAlignment','left');
+adcsKd = uieditfield(gl, 'numeric', 'Value', P0.adcs.Kd, 'Limits',[0 10]);
+
+uilabel(gl, 'Text','RW torque max [N·m] (full)', 'HorizontalAlignment','left');
+rwTauMax = uieditfield(gl, 'numeric', 'Value', P0.rw.tau_max_Nm(1), 'Limits',[1e-6 1]);
+
+uilabel(gl, 'Text','Full int substeps', 'HorizontalAlignment','left');
+intSub = uieditfield(gl, 'numeric', 'Value', P0.full.int_substeps, 'Limits',[1 100]);
+
 uilabel(gl, 'Text','Orbit markers (3D) [count]', 'HorizontalAlignment','left');
 nMarkers = uieditfield(gl, 'numeric', 'Value', 36, 'Limits',[6 200]);
 
 % --- Buttons ---
 btnRunMatlab = uibutton(gl, 'Text','Run MATLAB (selected)', 'ButtonPushedFcn', @onRunMatlab);
-btnRunMatlab.Layout.Row = 21; btnRunMatlab.Layout.Column = 1;
+btnRunMatlab.Layout.Row = 26; btnRunMatlab.Layout.Column = 1;
 
 btnRunSimulink = uibutton(gl, 'Text','Run Simulink', 'ButtonPushedFcn', @onRunSimulink);
-btnRunSimulink.Layout.Row = 21; btnRunSimulink.Layout.Column = 2;
+btnRunSimulink.Layout.Row = 26; btnRunSimulink.Layout.Column = 2;
 
 btnRunBoth = uibutton(gl, 'Text','MATLAB vs Simulink (baseline)', 'ButtonPushedFcn', @onRunBoth);
-btnRunBoth.Layout.Row = 22; btnRunBoth.Layout.Column = 1;
+btnRunBoth.Layout.Row = 27; btnRunBoth.Layout.Column = 1;
 
 btnRunMatlabBoth = uibutton(gl, 'Text','Baseline vs MPC (MATLAB)', 'ButtonPushedFcn', @onRunMatlabBothControllers);
-btnRunMatlabBoth.Layout.Row = 22; btnRunMatlabBoth.Layout.Column = 2;
+btnRunMatlabBoth.Layout.Row = 27; btnRunMatlabBoth.Layout.Column = 2;
 
 btnAnimMatlab = uibutton(gl, 'Text','Animate MATLAB (selected)', 'ButtonPushedFcn', @onAnimateMatlab);
-btnAnimMatlab.Layout.Row = 23; btnAnimMatlab.Layout.Column = 1;
+btnAnimMatlab.Layout.Row = 28; btnAnimMatlab.Layout.Column = 1;
 
 btnAnimSim = uibutton(gl, 'Text','Animate Simulink', 'ButtonPushedFcn', @onAnimateSimulink);
-btnAnimSim.Layout.Row = 23; btnAnimSim.Layout.Column = 2;
+btnAnimSim.Layout.Row = 28; btnAnimSim.Layout.Column = 2;
 
 btnOpenOut = uibutton(gl, 'Text','Open outputs/', 'ButtonPushedFcn', @onOpenOutputs);
-btnOpenOut.Layout.Row = 24; btnOpenOut.Layout.Column = 1;
+btnOpenOut.Layout.Row = 29; btnOpenOut.Layout.Column = 1;
 
 btnBench = uibutton(gl, 'Text','Run Benchmarks', 'ButtonPushedFcn', @onRunBenchmarks);
-btnBench.Layout.Row = 24; btnBench.Layout.Column = 2;
+btnBench.Layout.Row = 29; btnBench.Layout.Column = 2;
 
 btnAnimFull = uibutton(gl, 'Text','Animate FULL (last)', 'ButtonPushedFcn', @onAnimateFull);
-btnAnimFull.Layout.Row = 25; btnAnimFull.Layout.Column = [1 2];
+btnAnimFull.Layout.Row = 30; btnAnimFull.Layout.Column = [1 2];
 
 % --- Status log ---
 status = uitextarea(gl, 'Editable','off');
-status.Layout.Row = 27;
+status.Layout.Row = 32;
 status.Layout.Column = [1 2];
 status.Value = { ...
     'Adjust parameters, then run MATLAB/Simulink.' ...
@@ -134,6 +149,7 @@ end
 function P = readP()
     P = params_default(); % start from known-good defaults
     P.env.bfield_model = string(bfieldModel.Value);
+    P.env.igrf_decimal_year = igrfYear.Value;
     P.orbit.alt_m = alt_km.Value * 1e3;
     P.orbit.inc_deg = inc_deg.Value;
     P.orbit.theta0_deg = theta0_deg.Value;
@@ -148,6 +164,10 @@ function P = readP()
     P.env.enable_drag = logical(chkDrag.Value);
     P.env.drag_scale = dragScale.Value;
     P.x0 = [x0x.Value; x0y.Value; x0z.Value];
+    P.adcs.Kp = adcsKp.Value;
+    P.adcs.Kd = adcsKd.Value;
+    P.rw.tau_max_Nm = rwTauMax.Value * ones(3,1);
+    P.full.int_substeps = max(1, round(intSub.Value));
     P.N = round(P.Tend / P.Ts);
     P.viz.nOrbitMarkers = nMarkers.Value;
 end
@@ -165,6 +185,10 @@ end
 
 function out = simulink_out_file()
     out = fullfile(repo_root, 'outputs', 'simulink', 'sim_out_simulink.mat');
+end
+
+function out = simulink_full_out_file()
+    out = fullfile(repo_root, 'outputs', 'simulink_full', 'sim_out_full_simulink.mat');
 end
 
 % ---------- callbacks ----------
@@ -188,10 +212,15 @@ end
 
 function onRunSimulink(~, ~)
     P = readP();
-    logLine("Running Simulink baseline (rebuild model)…");
+    logLine("Running Simulink (" + string(plantMode.Value) + ")…");
     try
-        run_simulink(P);
-        logLine("Simulink complete: " + simulink_out_file());
+        if startsWith(string(plantMode.Value), "full")
+            run_simulink_full(P);
+            logLine("Simulink full complete: " + simulink_full_out_file());
+        else
+            run_simulink(P);
+            logLine("Simulink complete: " + simulink_out_file());
+        end
     catch ME
         logLine("Simulink error: " + ME.message);
         uialert(fig, ME.message, 'Simulink Run Failed');
@@ -200,10 +229,16 @@ end
 
 function onRunBoth(~, ~)
     P = readP();
-    logLine("Running MATLAB (baseline) + Simulink (baseline) + compare…");
+    logLine("Running MATLAB + Simulink (" + string(plantMode.Value) + ")…");
     try
-        run_all_and_compare(P);
-        logLine("Compare complete. See outputs/ and console for diffs.");
+        if startsWith(string(plantMode.Value), "full")
+            main_run_full_sim("baseline", P);
+            run_simulink_full(P);
+            logLine("Full MATLAB + Simulink complete. See outputs/matlab_full and outputs/simulink_full.");
+        else
+            run_all_and_compare(P);
+            logLine("Compare complete. See outputs/ and console for diffs.");
+        end
     catch ME
         logLine("Run/compare error: " + ME.message);
         uialert(fig, ME.message, 'Run Both Failed');
@@ -274,6 +309,18 @@ function onAnimateFull(~, ~)
 end
 
 function onAnimateSimulink(~, ~)
+    if startsWith(string(plantMode.Value), "full")
+        f = simulink_full_out_file();
+        if ~exist(f, 'file')
+            uialert(fig, "Simulink full output not found. Run Simulink (full) first.", 'Missing Output');
+            return;
+        end
+        S = load(f);
+        P = S.P;
+        animate_mtq_full_scene(P, S, "Simulink/full");
+        return;
+    end
+
     f = simulink_out_file();
     if ~exist(f, 'file')
         uialert(fig, "Simulink output not found. Run Simulink first.", 'Missing Output');

@@ -41,6 +41,12 @@ Outputs are saved to `outputs/matlab_full/` and include a 3D scene that visualiz
 
 > Note: if `P.env.bfield_model = "igrf"`, `run_simulink.m` automatically uses an **Interpreted MATLAB Function** variant of the model so it can call `igrfmagm`.
 
+### Full plant in Simulink
+
+- `run_simulink_full(P)`
+
+This builds `mtq_full_model.slx` (with an interpreted MATLAB Function block that calls `sim_full_step`) and writes results to `outputs/simulink_full/`.
+
 ## Project structure
 
 ```
