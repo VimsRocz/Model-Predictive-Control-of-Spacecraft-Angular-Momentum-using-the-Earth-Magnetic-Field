@@ -12,101 +12,55 @@ This repository contains a **buildable MATLAB + Simulink project** for magnetic-
 - A **full attitude + wheels + MTQ** simulation (LVLH reference) with **interactive 3D visualization**.
 - **IGRF-14 magnetic field model** support (Aerospace Toolbox `igrfmagm`).
 
-## **Input**
+## Quick Start
 
-**Run files (only these two are entry points):**
+**MATLAB (run this):**
 - `run_matlab.m`
+
+**Simulink (run this):**
 - `run_simulink.m`
 
-**Parameter file:**
+Both entry points automatically load parameters, run the selected model, and generate plots.
+
+## How To Change Parameters
+
+Default parameters live in:
 - `MATLAB/Input/params/params_default.m`
 
-**Folder structure (requested):**
-- `MATLAB/Input`, `MATLAB/Processing`, `MATLAB/Output`
-- `Simulink/Input`, `Simulink/Processing`, `Simulink/Output`
+You can either edit that file, or override in MATLAB before running:
 
-**Common parameters (override via UI or by passing a custom `P`):**
-- `P.plant.model = "full" | "momentum"`
-- `P.controller = "baseline" | "mpc"`
-- `P.x0 = [h_x; h_y; h_z]` (initial wheel momentum / x0)
-- `P.orbit.alt_m`, `P.orbit.inc_deg`
-- `P.env.bfield_model = "igrf" | "dipole"`
-- `P.env.igrf_decimal_year`
+```matlab
+P = params_default();
 
-**Interactive UI (optional):**
-- `MATLAB/Processing/interactive_mtq_explorer.m`
+% Model selection
+P.plant.model = "full";        % "full" or "momentum"
+P.controller  = "baseline";    % "baseline" or "mpc"
+P.simulink.controller = "baseline"; % for Simulink runs
 
-## **Process**
+% Initial wheel momentum
+P.x0 = [0.02; -0.01; 0.03];
 
-**MATLAB pipeline (called by `run_matlab.m`):**
-- `simulate_mtq_full.m` (full model) or `simulate_mtq.m` (momentum-only)
-- `MATLAB/Processing/controllers/baseline_mtq.m`
-- `MATLAB/Processing/controllers/mpc_mtq_qp.m`
-- `MATLAB/Processing/models/earth_mag_field_eci.m` → `earth_igrf_field.m` or `earth_dipole_field.m`
-- `MATLAB/Processing/models/ext_torques_body.m` (full) or `ext_torques.m` (momentum-only)
-- Internal drivers: `main_run_full_sim.m`, `main_run_sim.m` (do not run directly)
-- Logical grouping: see `MATLAB/Processing/README.md`
+% Orbit
+P.orbit.alt_m = 550e3;
+P.orbit.inc_deg = 97.5;
 
-**Simulink pipeline (called by `run_simulink.m`):**
-- Full model: `Simulink/Processing/build_simulink_full_model_imf.m` → `mtq_full_model.slx`
-- Full model stepper: `Simulink/Processing/sim_full_step.m`
-- Momentum-only model: `Simulink/Processing/build_simulink_model.m` or `build_simulink_model_imf.m`
-- IMF helpers: `Simulink/Processing/sim_b_field.m`, `sim_controller.m`, `sim_tau_ext.m`
-- Logical grouping: see `Simulink/Processing/README.md`
+% Magnetic field model
+P.env.bfield_model = "igrf";   % "igrf" or "dipole"
+P.env.igrf_decimal_year = 2026.0;
 
-## **Output**
+% Run
+run_matlab(P);      % MATLAB
+run_simulink(P);    % Simulink
+```
 
-**MATLAB outputs (full model):**
-- `MATLAB/Output/full/sim_out_full.mat`
-- `MATLAB/Output/full/report_full_timeseries_*.png`
-- `MATLAB/Output/full/scene_full_earth_*.png`
-
-**MATLAB outputs (momentum-only):**
-- `MATLAB/Output/momentum/sim_out_matlab.mat`
-- `MATLAB/Output/momentum/report_timeseries_*.png`
-- `MATLAB/Output/momentum/scene_earth_*.png`
-
-**MATLAB outputs (benchmarks):**
-- `MATLAB/Output/analysis/benchmark_summary.*`
-
-**Simulink outputs (full model):**
-- `Simulink/Output/full/sim_out_full_simulink.mat`
-- `Simulink/Output/full/report_full_timeseries_Simulink.png`
-- `Simulink/Output/full/scene_full_earth_Simulink.png`
-
-**Simulink outputs (momentum-only):**
-- `Simulink/Output/momentum/sim_out_simulink.mat`
-- `Simulink/Output/momentum/report_timeseries_Simulink.png`
-- `Simulink/Output/momentum/scene_earth_Simulink.png`
-
-**MATLAB vs Simulink consistency:**
-- `run_matlab.m` and `run_simulink.m` now use the same controller (`P.controller` / `P.simulink.controller`) and the same plant (`P.plant.model`). Both print a max-difference summary if the other output exists.
-
-## Folders
+## Folder Structure
 
 - `MATLAB/` (Input/Processing/Output)
 - `Simulink/` (Input/Processing/Output)
-- `MATLAB/Processing/models/` dynamics, orbit, and environment models
-- `MATLAB/Processing/controllers/` baseline + MPC controllers
-- `MATLAB/Processing/plotting/` 2D reports and 3D scenes/animations
 
-## Controller notes
-
-**Baseline:**
-
-```
-m = (B × τ_des) / ||B||^2,  τ_des = -K_H x
-```
-
-**MPC:** solves a box-constrained QP over a horizon with time-varying `B_k`.
-
-## Benchmark ideas
-
-- Horizon length sweep (10 / 30 / 60 / 120)
-- MTQ authority sweep (`m_max` low vs high)
-- Orbit inclination changes (affects `B` geometry)
-- Bias + periodic disturbance torque
-- Monte Carlo on inertia and disturbance uncertainty
+**Detailed instructions:**
+- `MATLAB/README.md`
+- `Simulink/README.md`
 
 ## Requirements
 

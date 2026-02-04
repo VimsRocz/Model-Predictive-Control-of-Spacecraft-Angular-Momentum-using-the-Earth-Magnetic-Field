@@ -1,0 +1,35 @@
+# Simulink
+
+## INPUT
+- Parameters are shared with MATLAB:
+  - `MATLAB/Input/params/params_default.m`
+- Change parameters in the file above, or pass a custom struct:
+
+```matlab
+P = params_default();
+P.plant.model = "full";           % "full" or "momentum"
+P.simulink.controller = "baseline"; % "baseline" or "mpc"
+P.orbit.alt_m = 550e3;
+P.orbit.inc_deg = 97.5;
+P.env.bfield_model = "igrf";      % "igrf" or "dipole"
+P.env.igrf_decimal_year = 2026.0;
+run_simulink(P);
+```
+
+## PROCESSING
+- Main entry point (run this): `run_simulink.m` (repo root)
+- Simulink builders + IMF wrappers live under:
+  - `Simulink/Processing/build_simulink_model.m`
+  - `Simulink/Processing/build_simulink_model_imf.m`
+  - `Simulink/Processing/build_simulink_full_model_imf.m`
+  - `Simulink/Processing/sim_b_field.m`, `sim_controller.m`, `sim_tau_ext.m`, `sim_full_step.m`
+
+## OUTPUT
+- Momentum-only outputs:
+  - `Simulink/Output/momentum/sim_out_simulink.mat`
+  - `Simulink/Output/momentum/report_timeseries_Simulink.png`
+  - `Simulink/Output/momentum/scene_earth_Simulink.png`
+- Full model outputs:
+  - `Simulink/Output/full/sim_out_full_simulink.mat`
+  - `Simulink/Output/full/report_full_timeseries_Simulink.png`
+  - `Simulink/Output/full/scene_full_earth_Simulink.png`
