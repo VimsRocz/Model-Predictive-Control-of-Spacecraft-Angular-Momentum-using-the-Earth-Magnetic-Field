@@ -8,11 +8,14 @@ function run_simulink(P)
 clc;
 
 repo_root = fileparts(mfilename('fullpath'));
-addpath(repo_root);
+matlab_proc = fullfile(repo_root, 'MATLAB', 'Processing');
+simulink_proc = fullfile(repo_root, 'Simulink', 'Processing');
+addpath(matlab_proc);
+addpath(simulink_proc);
 addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
-addpath(fullfile(repo_root, 'models'));
-addpath(fullfile(repo_root, 'controllers'));
-addpath(fullfile(repo_root, 'plotting'));
+addpath(fullfile(matlab_proc, 'models'));
+addpath(fullfile(matlab_proc, 'controllers'));
+addpath(fullfile(matlab_proc, 'plotting'));
 
 close all;
 try
@@ -91,11 +94,14 @@ end
 function run_simulink_full_internal(P)
 % Full-plant Simulink run
 repo_root = fileparts(mfilename('fullpath'));
-addpath(repo_root);
+matlab_proc = fullfile(repo_root, 'MATLAB', 'Processing');
+simulink_proc = fullfile(repo_root, 'Simulink', 'Processing');
+addpath(matlab_proc);
+addpath(simulink_proc);
 addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
-addpath(fullfile(repo_root, 'models'));
-addpath(fullfile(repo_root, 'controllers'));
-addpath(fullfile(repo_root, 'plotting'));
+addpath(fullfile(matlab_proc, 'models'));
+addpath(fullfile(matlab_proc, 'controllers'));
+addpath(fullfile(matlab_proc, 'plotting'));
 
 build_simulink_full_model_imf();
 

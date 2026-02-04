@@ -9,12 +9,14 @@ function interactive_mtq_explorer()
 %
 % Note: The Simulink model is rebuilt on each run to embed parameters (keeps results reproducible).
 
-repo_root = fileparts(mfilename('fullpath'));
-addpath(repo_root);
+repo_root = fileparts(fileparts(mfilename('fullpath')));
+matlab_proc = fullfile(repo_root, 'MATLAB', 'Processing');
+addpath(matlab_proc);
 addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
-addpath(fullfile(repo_root, 'models'));
-addpath(fullfile(repo_root, 'controllers'));
-addpath(fullfile(repo_root, 'plotting'));
+addpath(fullfile(matlab_proc, 'models'));
+addpath(fullfile(matlab_proc, 'controllers'));
+addpath(fullfile(matlab_proc, 'plotting'));
+addpath(fullfile(repo_root, 'Simulink', 'Processing'));
 
 P0 = params_default();
 

@@ -10,11 +10,12 @@ function run_matlab(P)
 clc;
 
 repo_root = fileparts(mfilename('fullpath'));
-addpath(repo_root);
+matlab_proc = fullfile(repo_root, 'MATLAB', 'Processing');
+addpath(matlab_proc);
 addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
-addpath(fullfile(repo_root, 'models'));
-addpath(fullfile(repo_root, 'controllers'));
-addpath(fullfile(repo_root, 'plotting'));
+addpath(fullfile(matlab_proc, 'models'));
+addpath(fullfile(matlab_proc, 'controllers'));
+addpath(fullfile(matlab_proc, 'plotting'));
 
 if nargin < 1 || isempty(P)
     P = params_default();

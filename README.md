@@ -34,24 +34,24 @@ This repository contains a **buildable MATLAB + Simulink project** for magnetic-
 - `P.env.igrf_decimal_year`
 
 **Interactive UI (optional):**
-- `interactive_mtq_explorer.m`
+- `MATLAB/Processing/interactive_mtq_explorer.m`
 
 ## **Process**
 
 **MATLAB pipeline (called by `run_matlab.m`):**
 - `simulate_mtq_full.m` (full model) or `simulate_mtq.m` (momentum-only)
-- `controllers/baseline_mtq.m`
-- `controllers/mpc_mtq_qp.m`
-- `models/earth_mag_field_eci.m` → `models/earth_igrf_field.m` or `models/earth_dipole_field.m`
-- `models/ext_torques_body.m` (full) or `models/ext_torques.m` (momentum-only)
+- `MATLAB/Processing/controllers/baseline_mtq.m`
+- `MATLAB/Processing/controllers/mpc_mtq_qp.m`
+- `MATLAB/Processing/models/earth_mag_field_eci.m` → `earth_igrf_field.m` or `earth_dipole_field.m`
+- `MATLAB/Processing/models/ext_torques_body.m` (full) or `ext_torques.m` (momentum-only)
 - Internal drivers: `main_run_full_sim.m`, `main_run_sim.m` (do not run directly)
 - Logical grouping: see `MATLAB/Processing/README.md`
 
 **Simulink pipeline (called by `run_simulink.m`):**
-- Full model: `build_simulink_full_model_imf.m` → `mtq_full_model.slx`
-- Full model stepper: `sim_full_step.m`
-- Momentum-only model: `build_simulink_model.m` or `build_simulink_model_imf.m`
-- IMF helpers: `sim_b_field.m`, `sim_controller.m`, `sim_tau_ext.m`
+- Full model: `Simulink/Processing/build_simulink_full_model_imf.m` → `mtq_full_model.slx`
+- Full model stepper: `Simulink/Processing/sim_full_step.m`
+- Momentum-only model: `Simulink/Processing/build_simulink_model.m` or `build_simulink_model_imf.m`
+- IMF helpers: `Simulink/Processing/sim_b_field.m`, `sim_controller.m`, `sim_tau_ext.m`
 - Logical grouping: see `Simulink/Processing/README.md`
 
 ## **Output**
@@ -86,9 +86,9 @@ This repository contains a **buildable MATLAB + Simulink project** for magnetic-
 
 - `MATLAB/` (Input/Processing/Output)
 - `Simulink/` (Input/Processing/Output)
-- `models/` dynamics, orbit, and environment models
-- `controllers/` baseline + MPC controllers
-- `plotting/` 2D reports and 3D scenes/animations
+- `MATLAB/Processing/models/` dynamics, orbit, and environment models
+- `MATLAB/Processing/controllers/` baseline + MPC controllers
+- `MATLAB/Processing/plotting/` 2D reports and 3D scenes/animations
 
 ## Controller notes
 

@@ -7,7 +7,13 @@ function compare_baseline_vs_mpc(P)
 %
 % If P is provided, it is used only for labeling (files are loaded from disk).
 
-repo_root = fileparts(mfilename('fullpath'));
+repo_root = fileparts(fileparts(mfilename('fullpath')));
+matlab_proc = fullfile(repo_root, 'MATLAB', 'Processing');
+addpath(matlab_proc);
+addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
+addpath(fullfile(matlab_proc, 'models'));
+addpath(fullfile(matlab_proc, 'controllers'));
+addpath(fullfile(matlab_proc, 'plotting'));
 out_dir = fullfile(repo_root, 'MATLAB', 'Output', 'momentum');
 
 f_base = fullfile(out_dir, 'sim_out_matlab_baseline.mat');

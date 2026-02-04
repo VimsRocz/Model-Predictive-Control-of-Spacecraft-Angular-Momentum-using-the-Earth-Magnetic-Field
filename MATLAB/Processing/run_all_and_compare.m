@@ -1,12 +1,13 @@
 function run_all_and_compare(P)
 %RUN_ALL_AND_COMPARE Re-run both MATLAB and Simulink flows and compare outputs.
 
-repo_root = fileparts(mfilename('fullpath'));
-addpath(repo_root);
+repo_root = fileparts(fileparts(mfilename('fullpath')));
+matlab_proc = fullfile(repo_root, 'MATLAB', 'Processing');
+addpath(matlab_proc);
 addpath(fullfile(repo_root, 'MATLAB', 'Input', 'params'));
-addpath(fullfile(repo_root, 'models'));
-addpath(fullfile(repo_root, 'controllers'));
-addpath(fullfile(repo_root, 'plotting'));
+addpath(fullfile(matlab_proc, 'models'));
+addpath(fullfile(matlab_proc, 'controllers'));
+addpath(fullfile(matlab_proc, 'plotting'));
 
 close all;
 try
