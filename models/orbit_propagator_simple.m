@@ -1,16 +1,13 @@
 function B_body = orbit_propagator_simple(k, P)
-%ORBIT_PROPAGATOR_SIMPLE Synthetic B-field vector in body frame.
-% This proxy is enough to validate MPC logic without full orbit/IGRF.
+%ORBIT_PROPAGATOR_SIMPLE Earth magnetic field along a simple circular orbit.
+%
+% Momentum-only model assumes body frame ~ inertial frame, so this returns
+% B in the same frame. The underlying model is selected via:
+%   P.env.bfield_model = "dipole" | "igrf"
 
-t = (k-1)*P.Ts;
+r_eci_m = orbit_state_simple(k, P);
+t_s = (k-1) * P.Ts;
+B_eci_T = earth_mag_field_eci(r_eci_m, P, t_s);
 
-% Rotate a nominal field direction over time (mimics orbit evolution)
-w_orb = 2*pi/(90*60); % ~90 min orbit rad/s
-theta = w_orb * t;
-
-% Simple varying inertial-ish field
-B_inertial = P.B0_T * [cos(theta); 0.3*sin(theta); 0.6*cos(0.5*theta)];
-
-% Assume body frame ~ inertial frame for momentum-only model
-B_body = B_inertial;
+B_body = B_eci_T;
 end

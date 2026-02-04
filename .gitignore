@@ -10,6 +10,7 @@ slprj/
 
 # Data / output
 *.mat
+outputs/
 
 # OS
 .DS_Store

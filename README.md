@@ -9,6 +9,8 @@ This repository contains a **buildable MATLAB + Simulink project** for magnetic-
 - A **baseline instantaneous controller** (projection/pseudoinverse style).
 - A **linear time-varying MPC** that uses **future B-field directions** along the orbit.
 - A **Simulink model auto-builder** script (no manual block editing).
+- A **full attitude + wheels + MTQ** simulation (LVLH reference) with **interactive 3D visualization**.
+- **IGRF-14 magnetic field model** support (Aerospace Toolbox `igrfmagm`).
 
 ## Quick start (MATLAB)
 
@@ -18,6 +20,13 @@ This repository contains a **buildable MATLAB + Simulink project** for magnetic-
 	 - `main_run_sim.m`
 
 This will generate `sim_out.mat` and open plots.
+
+### Full attitude + wheels plant (MATLAB)
+
+- `main_run_full_sim("baseline")`
+- `main_run_full_sim("mpc")`
+
+Outputs are saved to `outputs/matlab_full/` and include a 3D scene that visualizes the **“MTQ torque is always ⟂B”** constraint using a plane at the satellite position.
 
 ## Quick start (Simulink)
 
@@ -30,23 +39,36 @@ This will generate `sim_out.mat` and open plots.
 
 2. The signals `x_log` and `m_log` are saved to the workspace.
 
+> Note: if `P.env.bfield_model = "igrf"`, `run_simulink.m` automatically uses an **Interpreted MATLAB Function** variant of the model so it can call `igrfmagm`.
+
 ## Project structure
 
 ```
 main_run_sim.m
+main_run_full_sim.m
 build_simulink_model.m
+build_simulink_model_imf.m
+interactive_mtq_explorer.m
 params/
 	params_default.m
 models/
 	skew.m
+	earth_dipole_field.m
+	earth_igrf_field.m
+	earth_mag_field_eci.m
 	orbit_propagator_simple.m
+	orbit_state_simple.m
+	orbit_state_rv_simple.m
 	ext_torques.m
+	ext_torques_body.m
+	lvlh_reference.m
 controllers/
 	baseline_mtq.m
 	build_mpc_qp.m
 	mpc_mtq_qp.m
 plotting/
 	plot_results.m
+	plot_results_full.m
 ```
 
 ## Controller notes
@@ -71,5 +93,6 @@ m = (B × τ_des) / ||B||^2,  τ_des = -K_H x
 
 - MATLAB (Optimization Toolbox for `quadprog`)
 - Simulink (for the auto-built model)
+- Aerospace Toolbox (for `igrfmagm`, `ecef2lla`, etc. when using IGRF)
 
-If you want a full attitude + wheel dynamics plant, or a real IGRF model, add your toolboxes and I will extend this project.
+If Aerospace Toolbox is not available, set `P.env.bfield_model = "dipole"`.
