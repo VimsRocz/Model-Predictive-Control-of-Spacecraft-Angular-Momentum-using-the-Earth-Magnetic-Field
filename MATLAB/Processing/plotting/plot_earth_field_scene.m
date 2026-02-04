@@ -187,6 +187,16 @@ tau_perp = tau_des - tau_par;
 Re = P.earth.Re_m;
 L = 0.25 * Re;
 
+% Offset the decomposition vectors so tau_mtq (often == tau_des,⊥B) does not
+% visually hide the perpendicular/parallel components.
+satSizeRe = 0.02;
+if isfield(P,'viz') && isfield(P.viz,'sat_size_Re')
+    satSizeRe = double(P.viz.sat_size_Re);
+end
+satOffset = 1.6 * (satSizeRe * Re);
+r_perp = r0 + satOffset * [1 0 0];
+r_par  = r0 + satOffset * [0 1 0];
+
 [Bv, okB] = unit_vec(B0);
 [mv, okm] = unit_vec(m0);
 [tv, okt] = unit_vec(tau_mtq);
@@ -225,13 +235,13 @@ if okt
     try, h.Clipping = 'off'; end
 end
 if okdp
-    h = quiver3(ax, r0(1), r0(2), r0(3), L*dpv(1), L*dpv(2), L*dpv(3), 0, ...
+    h = quiver3(ax, r_perp(1), r_perp(2), r_perp(3), L*dpv(1), L*dpv(2), L*dpv(3), 0, ...
         'Color',[0 0 0], 'LineWidth', 1.2, 'LineStyle','--', 'MaxHeadSize', 0.7, ...
         'HandleVisibility', hv, 'DisplayName','\tau_{des,\perp B}');
     try, h.Clipping = 'off'; end
 end
 if okda
-    h = quiver3(ax, r0(1), r0(2), r0(3), L*dav(1), L*dav(2), L*dav(3), 0, ...
+    h = quiver3(ax, r_par(1), r_par(2), r_par(3), L*dav(1), L*dav(2), L*dav(3), 0, ...
         'Color',[0.7 0 0.7], 'LineWidth', 1.2, 'LineStyle',':', 'MaxHeadSize', 0.7, ...
         'HandleVisibility', hv, 'DisplayName','\tau_{des,\parallel B}');
     try, h.Clipping = 'off'; end

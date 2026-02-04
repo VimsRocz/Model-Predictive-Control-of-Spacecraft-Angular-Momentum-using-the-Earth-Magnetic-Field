@@ -196,8 +196,20 @@ plot_vec(ax, r, B_eci, L, [0.0 0.45 0.74], 'B', '-', hv);
 plot_vec(ax, r, h_eci, L, [0.35 0.35 0.35], 'h_w (wheel momentum)', '-', hv);
 plot_vec(ax, r, m_eci, L, [0.85 0.33 0.10], 'm (dipole)', '-', hv);
 plot_vec(ax, r, tau_mtq_eci, L, [0.47 0.67 0.19], '\tau_{mtq}=m×B', '-', hv);
-plot_vec(ax, r, tau_perp_eci, L, [0 0 0], '\tau_{des,\perp B}', '--', hv);
-plot_vec(ax, r, tau_par_eci, L, [0.7 0 0.7], '\tau_{des,\parallel B}', ':', hv);
+
+% Offset the decomposition vectors so tau_mtq (often == tau_des,⊥B) does not
+% visually hide the perpendicular/parallel components.
+satSizeRe = 0.02;
+if isfield(P,'viz') && isfield(P.viz,'sat_size_Re')
+    satSizeRe = double(P.viz.sat_size_Re);
+end
+satOffset = 1.6 * (satSizeRe * P.earth.Re_m);
+ex = C_ib(:,1);
+ey = C_ib(:,2);
+r_perp = r + satOffset*ex;
+r_par  = r + satOffset*ey;
+plot_vec(ax, r_perp, tau_perp_eci, L, [0 0 0], '\tau_{des,\perp B}', '--', hv);
+plot_vec(ax, r_par,  tau_par_eci,  L, [0.7 0 0.7], '\tau_{des,\parallel B}', ':', hv);
 
 % Body axes triad
 draw_body_axes(ax, r, C_ib, 0.16*P.earth.Re_m, hv);

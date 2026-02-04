@@ -60,7 +60,7 @@ P.viz.nOrbitMarkers = 36;
 P.viz.sat_size_Re = 0.02; % spacecraft cube size as fraction of Earth radius (for visibility)
 P.viz.animate_all_steps = true; % true = animate every sample (full rotation)
 P.viz.animate_stride = 5;        % stride when animate_all_steps=true (increase for speed)
-P.viz.show_sun = true;           % show Sun in 3D scenes
+P.viz.show_sun = false;          % show Sun in 3D scenes (disabled by default)
 % Sun is NOT to physical scale in distance/size (for visualization only).
 P.viz.sun_distance_Re = 6;       % distance of Sun from Earth center (in Earth radii)
 P.viz.sun_radius_Re = 1.5;       % Sun size (in Earth radii) for visualization

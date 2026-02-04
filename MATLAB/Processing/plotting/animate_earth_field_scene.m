@@ -309,12 +309,23 @@ function update_frame(iFrame)
     end
     tau_perp = tau_des - tau_par;
 
+    % Offset the decomposition vectors so "tau_mtq" (often == tau_des,⊥B)
+    % does not visually hide the perpendicular/parallel components.
+    satSizeRe = 0.02;
+    if isfield(P,'viz') && isfield(P.viz,'sat_size_Re')
+        satSizeRe = double(P.viz.sat_size_Re);
+    end
+    satOffset = 1.6 * (satSizeRe * Re);
+    r_tau  = r;
+    r_perp = r + satOffset * [1 0 0];
+    r_par  = r + satOffset * [0 1 0];
+
     update_quiver(qB, r, Bk, Lvec, [0.0 0.45 0.74], 'B');
     update_quiver(qx, r, xk, Lvec, [0.35 0.35 0.35], 'x (momentum error)');
     update_quiver(qm, r, mk, Lvec, [0.85 0.33 0.10], 'm (dipole)');
-    update_quiver(qtau, r, tau_mtq, Lvec, [0.47 0.67 0.19], '\tau_{mtq} = m×B');
-    update_quiver(qtauPerp, r, tau_perp, Lvec, [0 0 0], '\tau_{des,\perp B}', '--');
-    update_quiver(qtauPar, r, tau_par, Lvec, [0.7 0 0.7], '\tau_{des,\parallel B}', ':');
+    update_quiver(qtau, r_tau, tau_mtq, Lvec, [0.47 0.67 0.19], '\tau_{mtq} = m×B');
+    update_quiver(qtauPerp, r_perp, tau_perp, Lvec, [0 0 0], '\tau_{des,\perp B}', '--');
+    update_quiver(qtauPar, r_par, tau_par, Lvec, [0.7 0 0.7], '\tau_{des,\parallel B}', ':');
 
     % Live magnitudes
     xmag = norm(xk);

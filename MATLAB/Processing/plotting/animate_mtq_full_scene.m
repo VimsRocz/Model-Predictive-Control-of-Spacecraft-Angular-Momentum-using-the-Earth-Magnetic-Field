@@ -2,7 +2,7 @@ function fig = animate_mtq_full_scene(P, S, label)
 %ANIMATE_MTQ_FULL_SCENE Interactive 3D animation for the full model.
 %
 % Shows:
-% - Earth + dipole field lines (context) + optional Sun
+% - Earth + dipole field lines (context)
 % - Orbit markers or full-rotation animation (configurable)
 % - Satellite cube + body axes
 % - Vectors: B, h_w, m, tau_mtq, tau_des, and the plane ⟂B
@@ -346,12 +346,18 @@ function update_frame(iFrame)
     tau_par = dot(tau_des_eci, bhat) * bhat;
     tau_perp = tau_des_eci - tau_par;
 
+    % Offset the decomposition vectors so "tau_mtq" (often == tau_des,⊥B)
+    % does not visually hide the perpendicular/parallel components.
+    r_tau = r;
+    r_perp = r + 1.6*satSize_m*ex;
+    r_par  = r + 1.6*satSize_m*ey;
+
     update_quiver(qB, r, Bk, Lvec);
     update_quiver(qh, r, hk_eci, Lvec);
     update_quiver(qm, r, mk_eci, Lvec);
-    update_quiver(qtau, r, tau_mtq_eci, Lvec);
-    update_quiver(qtauPerp, r, tau_perp, Lvec);
-    update_quiver(qtauPar, r, tau_par, Lvec);
+    update_quiver(qtau, r_tau, tau_mtq_eci, Lvec);
+    update_quiver(qtauPerp, r_perp, tau_perp, Lvec);
+    update_quiver(qtauPar, r_par, tau_par, Lvec);
 
     % Plane ⟂B
     [X,Y,Z] = plane_quad(r, bhat, 0.14*Re);

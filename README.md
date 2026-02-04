@@ -11,7 +11,7 @@ This repository contains a **buildable MATLAB + Simulink project** for magnetic-
 - A **Simulink model auto-builder** script (no manual block editing).
 - A **full attitude + wheels + MTQ** simulation (LVLH reference) with **interactive 3D visualization**.
 - **IGRF-14 magnetic field model** support (Aerospace Toolbox `igrfmagm`).
-- 3D **Earth + Sun** scene with interactive camera controls, magnetometer component arrows, and torque readouts.
+- 3D **Earth** scene with interactive camera controls, magnetometer component arrows, and torque readouts.
 
 ## Quick Start
 
@@ -50,7 +50,7 @@ P.env.bfield_model = "igrf";   % "igrf" or "dipole"
 P.env.igrf_decimal_year = 2026.0;
 
 % 3D visualization controls
-P.viz.show_sun = true;          % show Sun in 3D scene
+P.viz.show_sun = false;         % show Sun in 3D scene (optional)
 P.viz.animate_all_steps = true; % full rotation animation
 P.viz.animate_stride = 1;       % use >1 to speed up animation
 P.viz.auto_animate_full = true; % auto-play after run
