@@ -77,13 +77,13 @@ chkDrag = uicheckbox(gl, 'Value', false);
 uilabel(gl, 'Text','Drag scale factor', 'HorizontalAlignment','left');
 dragScale = uieditfield(gl, 'numeric', 'Value', P0.env.drag_scale, 'Limits',[0 1e6]);
 
-uilabel(gl, 'Text','Initial x0_x [N·m·s]', 'HorizontalAlignment','left');
+uilabel(gl, 'Text','Initial h_w/x0_x [N·m·s]', 'HorizontalAlignment','left');
 x0x = uieditfield(gl, 'numeric', 'Value', P0.x0(1));
 
-uilabel(gl, 'Text','Initial x0_y [N·m·s]', 'HorizontalAlignment','left');
+uilabel(gl, 'Text','Initial h_w/x0_y [N·m·s]', 'HorizontalAlignment','left');
 x0y = uieditfield(gl, 'numeric', 'Value', P0.x0(2));
 
-uilabel(gl, 'Text','Initial x0_z [N·m·s]', 'HorizontalAlignment','left');
+uilabel(gl, 'Text','Initial h_w/x0_z [N·m·s]', 'HorizontalAlignment','left');
 x0z = uieditfield(gl, 'numeric', 'Value', P0.x0(3));
 
 uilabel(gl, 'Text','ADCS Kp (full)', 'HorizontalAlignment','left');
@@ -149,6 +149,11 @@ end
 function P = readP()
     P = params_default(); % start from known-good defaults
     P.simulink.controller = string(ctrlMode.Value); % lock Simulink controller to MATLAB selection
+    if startsWith(string(plantMode.Value), "full")
+        P.plant.model = "full";
+    else
+        P.plant.model = "momentum";
+    end
     P.env.bfield_model = string(bfieldModel.Value);
     P.env.igrf_decimal_year = igrfYear.Value;
     P.orbit.alt_m = alt_km.Value * 1e3;
@@ -195,15 +200,13 @@ end
 % ---------- callbacks ----------
 function onRunMatlab(~, ~)
     P = readP();
-    mode = string(ctrlMode.Value);
-    logLine("Running MATLAB (" + mode + ", " + string(plantMode.Value) + ")…");
+    logLine("Running MATLAB (" + string(plantMode.Value) + ", " + string(ctrlMode.Value) + ")…");
     try
+        run_matlab(P);
         if startsWith(string(plantMode.Value), "full")
-            main_run_full_sim(mode, P);
-            logLine("MATLAB full complete: " + full_out_file(mode));
+            logLine("MATLAB full complete: " + full_out_file(string(ctrlMode.Value)));
         else
-            main_run_sim(mode, P);
-            logLine("MATLAB complete: " + matlab_out_file(mode));
+            logLine("MATLAB complete: " + matlab_out_file(string(ctrlMode.Value)));
         end
     catch ME
         logLine("MATLAB error: " + ME.message);
@@ -215,11 +218,10 @@ function onRunSimulink(~, ~)
     P = readP();
     logLine("Running Simulink (" + string(plantMode.Value) + ")…");
     try
+        run_simulink(P);
         if startsWith(string(plantMode.Value), "full")
-            run_simulink_full(P);
             logLine("Simulink full complete: " + simulink_full_out_file());
         else
-            run_simulink(P);
             logLine("Simulink complete: " + simulink_out_file());
         end
     catch ME
@@ -232,12 +234,11 @@ function onRunBoth(~, ~)
     P = readP();
     logLine("Running MATLAB + Simulink (" + string(plantMode.Value) + ")…");
     try
+        run_matlab(P);
+        run_simulink(P);
         if startsWith(string(plantMode.Value), "full")
-            main_run_full_sim("baseline", P);
-            run_simulink_full(P);
             logLine("Full MATLAB + Simulink complete. See outputs/matlab_full and outputs/simulink_full.");
         else
-            run_all_and_compare(P);
             logLine("Compare complete. See outputs/ and console for diffs.");
         end
     catch ME

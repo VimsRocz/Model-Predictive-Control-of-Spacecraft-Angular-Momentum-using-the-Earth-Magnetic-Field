@@ -4,10 +4,14 @@ function [r_eci, B_eci, B_body, h_w, m, tau_ext, tau_mtq, tau_rw, q_ib, q_ib_des
 % Uses persistent state so Simulink can call this as a single block.
 % Outputs are the *current* state at time t (not the next state).
 
-persistent P state last_k last_t
+persistent P state last_k last_t last_run_id
 
-if isempty(P)
-    P = evalin('base','P');
+[baseP, base_id] = load_base_P();
+if isempty(P) || isempty(last_run_id) || ~strcmp(last_run_id, base_id)
+    P = baseP;
+    [state, last_k] = init_state(P);
+    last_t = -inf;
+    last_run_id = base_id;
 end
 
 if isempty(last_t) || t < last_t
@@ -37,6 +41,15 @@ end
 end
 
 % ---------------- helpers ----------------
+function [Pbase, run_id] = load_base_P()
+Pbase = evalin('base','P');
+run_id = "";
+if isfield(Pbase,'simulink') && isfield(Pbase.simulink,'run_id')
+    run_id = string(Pbase.simulink.run_id);
+end
+run_id = char(run_id);
+end
+
 function [state, k] = init_state(P)
 [r0, v0] = orbit_state_rv_simple(1, P);
 [q0_des, w0_des] = lvlh_reference(r0, v0);
@@ -240,4 +253,3 @@ t_s = (kk-1) * P.Ts;
 [q_des, ~] = lvlh_reference(r, v);
 tauk = ext_torques_body(t_s, r, v, q_des, P);
 end
-

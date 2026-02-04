@@ -7,6 +7,10 @@ P.Tend = 2*3600;        % [s] total simulation time
 P.N    = round(P.Tend/P.Ts);
 P.x0   = [0.02; -0.01; 0.03]; % [N*m*s] initial momentum error
 
+% --- Run defaults (entry points) ---
+P.plant.model = "full";     % "full" or "momentum"
+P.controller = "baseline";  % "baseline" or "mpc"
+
 % --- Earth constants (used by simple orbit + dipole B-field visualizations) ---
 P.earth.Re_m = 6371e3;              % [m] mean Earth radius
 P.earth.mu_m3s2 = 3.986004418e14;   % [m^3/s^2] Earth gravitational parameter

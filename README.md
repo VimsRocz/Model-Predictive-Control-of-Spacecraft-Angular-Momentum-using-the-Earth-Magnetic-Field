@@ -12,70 +12,74 @@ This repository contains a **buildable MATLAB + Simulink project** for magnetic-
 - A **full attitude + wheels + MTQ** simulation (LVLH reference) with **interactive 3D visualization**.
 - **IGRF-14 magnetic field model** support (Aerospace Toolbox `igrfmagm`).
 
-## Quick start (MATLAB)
+## **Input**
 
-1. Open MATLAB at the repo root.
-2. Run the simulation script:
+**Run files (only these two are entry points):**
+- `run_matlab.m`
+- `run_simulink.m`
 
-	 - `main_run_sim.m`
+**Parameter file:**
+- `params/params_default.m`
 
-This will generate `sim_out.mat` and open plots.
+**Common parameters (override via UI or by passing a custom `P`):**
+- `P.plant.model = "full" | "momentum"`
+- `P.controller = "baseline" | "mpc"`
+- `P.x0 = [h_x; h_y; h_z]` (initial wheel momentum / x0)
+- `P.orbit.alt_m`, `P.orbit.inc_deg`
+- `P.env.bfield_model = "igrf" | "dipole"`
+- `P.env.igrf_decimal_year`
 
-### Full attitude + wheels plant (MATLAB)
+**Interactive UI (optional):**
+- `interactive_mtq_explorer.m`
 
-- `main_run_full_sim("baseline")`
-- `main_run_full_sim("mpc")`
+## **Process**
 
-Outputs are saved to `outputs/matlab_full/` and include a 3D scene that visualizes the **“MTQ torque is always ⟂B”** constraint using a plane at the satellite position.
+**MATLAB pipeline (called by `run_matlab.m`):**
+- `simulate_mtq_full.m` (full model) or `simulate_mtq.m` (momentum-only)
+- `controllers/baseline_mtq.m`
+- `controllers/mpc_mtq_qp.m`
+- `models/earth_mag_field_eci.m` → `models/earth_igrf_field.m` or `models/earth_dipole_field.m`
+- `models/ext_torques_body.m` (full) or `models/ext_torques.m` (momentum-only)
+- Internal drivers: `main_run_full_sim.m`, `main_run_sim.m` (do not run directly)
 
-## Quick start (Simulink)
+**Simulink pipeline (called by `run_simulink.m`):**
+- Full model: `build_simulink_full_model_imf.m` → `mtq_full_model.slx`
+- Full model stepper: `sim_full_step.m`
+- Momentum-only model: `build_simulink_model.m` or `build_simulink_model_imf.m`
+- IMF helpers: `sim_b_field.m`, `sim_controller.m`, `sim_tau_ext.m`
 
-1. In MATLAB, run:
+## **Output**
 
-	 - `P = params_default();`
-	 - `assignin('base','P',P);`
-	 - `build_simulink_model();`
-	 - `sim("mtq_desat_mpc_model");`
+**MATLAB outputs:**
+- Full model:
+- `outputs/matlab_full/sim_out_full.mat`
+- `outputs/matlab_full/report_full_timeseries_*.png`
+- `outputs/matlab_full/scene_full_earth_*.png`
+- Momentum-only:
+- `outputs/matlab/sim_out_matlab.mat`
+- `outputs/matlab/report_timeseries_*.png`
+- `outputs/matlab/scene_earth_*.png`
 
-2. The signals `x_log` and `m_log` are saved to the workspace.
+**Simulink outputs:**
+- Full model:
+- `outputs/simulink_full/sim_out_full_simulink.mat`
+- `outputs/simulink_full/report_full_timeseries_Simulink.png`
+- `outputs/simulink_full/scene_full_earth_Simulink.png`
+- Momentum-only:
+- `outputs/simulink/sim_out_simulink.mat`
+- `outputs/simulink/report_timeseries_Simulink.png`
+- `outputs/simulink/scene_earth_Simulink.png`
 
-> Note: if `P.env.bfield_model = "igrf"`, `run_simulink.m` automatically uses an **Interpreted MATLAB Function** variant of the model so it can call `igrfmagm`.
+**MATLAB vs Simulink consistency:**
+- `run_matlab.m` and `run_simulink.m` now use the same controller (`P.controller` / `P.simulink.controller`) and the same plant (`P.plant.model`). Both print a max-difference summary if the other output exists.
 
-### Full plant in Simulink
+## Folders
 
-- `run_simulink_full(P)`
-
-This builds `mtq_full_model.slx` (with an interpreted MATLAB Function block that calls `sim_full_step`) and writes results to `outputs/simulink_full/`.
-
-## Project structure
-
-```
-main_run_sim.m
-main_run_full_sim.m
-build_simulink_model.m
-build_simulink_model_imf.m
-interactive_mtq_explorer.m
-params/
-	params_default.m
-models/
-	skew.m
-	earth_dipole_field.m
-	earth_igrf_field.m
-	earth_mag_field_eci.m
-	orbit_propagator_simple.m
-	orbit_state_simple.m
-	orbit_state_rv_simple.m
-	ext_torques.m
-	ext_torques_body.m
-	lvlh_reference.m
-controllers/
-	baseline_mtq.m
-	build_mpc_qp.m
-	mpc_mtq_qp.m
-plotting/
-	plot_results.m
-	plot_results_full.m
-```
+- `params/` defaults and scenario inputs
+- `models/` dynamics, orbit, and environment models
+- `controllers/` baseline + MPC controllers
+- `plotting/` 2D reports and 3D scenes/animations
+- `outputs/` generated MAT files and figures
 
 ## Controller notes
 
