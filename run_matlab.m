@@ -36,6 +36,16 @@ ctrl = lower(string(P.controller));
 switch plant
     case "full"
         main_run_full_sim(ctrl, P);
+        if isfield(P,'viz') && isfield(P.viz,'auto_animate_full') && P.viz.auto_animate_full
+            try
+                f = fullfile(repo_root, 'MATLAB', 'Output', 'full', 'sim_out_full.mat');
+                if exist(f,'file')
+                    S = load(f);
+                    animate_mtq_full_scene(P, S, "MATLAB/full/" + string(ctrl));
+                end
+            catch
+            end
+        end
     case "momentum"
         main_run_sim(ctrl, P);
     otherwise

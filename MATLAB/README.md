@@ -13,6 +13,13 @@ P.orbit.alt_m = 550e3;
 P.orbit.inc_deg = 97.5;
 P.env.bfield_model = "igrf";   % "igrf" or "dipole"
 P.env.igrf_decimal_year = 2026.0;
+
+% 3D visualization controls
+P.viz.show_sun = true;          % show Sun in 3D scene
+P.viz.animate_all_steps = true; % full rotation animation
+P.viz.animate_stride = 1;       % use >1 to speed up animation
+P.viz.auto_animate_full = true; % auto-play after run
+
 run_matlab(P);
 ```
 

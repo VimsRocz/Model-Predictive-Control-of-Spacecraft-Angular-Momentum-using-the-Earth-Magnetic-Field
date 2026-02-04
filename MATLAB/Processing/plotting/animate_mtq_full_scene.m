@@ -2,11 +2,12 @@ function fig = animate_mtq_full_scene(P, S, label)
 %ANIMATE_MTQ_FULL_SCENE Interactive 3D animation for the full model.
 %
 % Shows:
-% - Earth + dipole field lines (context)
-% - Orbit with 36 markers
+% - Earth + dipole field lines (context) + optional Sun
+% - Orbit markers or full-rotation animation (configurable)
 % - Satellite cube + body axes
 % - Vectors: B, h_w, m, tau_mtq, tau_des, and the plane ⟂B
-% - Live HUD: magnitudes, tau·B (≈0), angle(tau,B) (≈90°), attitude error
+% - Magnetometer component arrows (B_body on body axes)
+% - Live HUD: magnetometer components, torque components + totals, tau·B (≈0)
 
 if nargin < 3
     label = "full";
@@ -18,13 +19,21 @@ B_eci = ensure_nx3(S.B_eci);
 
 N = numel(t_s);
 
-% Orbit marker count (user-requested default: 36)
+% Orbit sample selection (full rotation or markers)
 nMarkers = 36;
 if isfield(P, "viz") && isfield(P.viz, "nOrbitMarkers")
     nMarkers = max(2, round(P.viz.nOrbitMarkers));
 end
-
-idx_anim = unique(round(linspace(1, N, nMarkers)));
+use_all = isfield(P,"viz") && isfield(P.viz,"animate_all_steps") && P.viz.animate_all_steps;
+stride = 1;
+if isfield(P,"viz") && isfield(P.viz,"animate_stride")
+    stride = max(1, round(P.viz.animate_stride));
+end
+if use_all
+    idx_anim = 1:stride:N;
+else
+    idx_anim = unique(round(linspace(1, N, nMarkers)));
+end
 nFrames = numel(idx_anim);
 
 Re = P.earth.Re_m;
@@ -35,6 +44,27 @@ fig.Position(3:4) = [1500 980];
 ax = axes(fig); %#ok<LAXES>
 hold(ax,'on'); grid(ax,'on'); axis(ax,'equal');
 view(ax, 35, 20);
+
+% Sun (optional)
+if isfield(P,'viz') && isfield(P.viz,'show_sun') && P.viz.show_sun
+    sun_dir = [1;0;0];
+    if isfield(P.viz,'sun_dir_eci') && numel(P.viz.sun_dir_eci) == 3
+        sun_dir = P.viz.sun_dir_eci(:);
+    end
+    sun_dir = sun_dir / max(norm(sun_dir), 1e-12);
+    sun_dist = 20;
+    if isfield(P.viz,'sun_distance_Re'); sun_dist = double(P.viz.sun_distance_Re); end
+    sun_rad = 2.5;
+    if isfield(P.viz,'sun_radius_Re'); sun_rad = double(P.viz.sun_radius_Re); end
+    sun_pos = (sun_dist * Re) * sun_dir;
+    [xs, ys, zs] = sphere(40);
+    surf(ax, sun_pos(1)+sun_rad*Re*xs, sun_pos(2)+sun_rad*Re*ys, sun_pos(3)+sun_rad*Re*zs, ...
+        'FaceColor',[0.95 0.7 0.1], 'FaceAlpha',0.85, 'EdgeColor','none', ...
+        'HandleVisibility','off');
+    quiver3(ax, 0,0,0, sun_pos(1), sun_pos(2), sun_pos(3), 0, ...
+        'Color',[0.95 0.7 0.1], 'LineWidth',1.1, 'MaxHeadSize',0.6, ...
+        'HandleVisibility','off');
+end
 
 % Earth sphere
 [xe, ye, ze] = sphere(60);
@@ -88,6 +118,12 @@ qbx = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.85 0.33 0.10], 'LineWidth', 1.0, '
 qby = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.25 0.6 0.2],  'LineWidth', 1.0, 'MaxHeadSize', 0.5, 'DisplayName','body y');
 qbz = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.1 0.3 0.8],   'LineWidth', 1.0, 'MaxHeadSize', 0.5, 'DisplayName','body z');
 qbx.AutoScale = 'off'; qby.AutoScale = 'off'; qbz.AutoScale = 'off';
+
+% Magnetometer component arrows (B_body along body axes)
+qmx = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.85 0.33 0.10], 'LineWidth', 1.2, 'LineStyle','--', 'MaxHeadSize', 0.6, 'DisplayName','B_x (mag)');
+qmy = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.25 0.6 0.2],  'LineWidth', 1.2, 'LineStyle','--', 'MaxHeadSize', 0.6, 'DisplayName','B_y (mag)');
+qmz = quiver3(ax, 0,0,0, 0,0,0, 0, 'Color',[0.1 0.3 0.8],   'LineWidth', 1.2, 'LineStyle','--', 'MaxHeadSize', 0.6, 'DisplayName','B_z (mag)');
+qmx.AutoScale = 'off'; qmy.AutoScale = 'off'; qmz.AutoScale = 'off';
 
 % Controller vectors quivers (legend entries)
 Lvec = 0.28 * Re;
@@ -217,11 +253,16 @@ function update_frame(iFrame)
 
     % Vectors (convert body->ECI where needed)
     Bk = B_eci(k,:).';
+    Bk_body = S.B_body(k,:).';
     mk_body = S.m(k,:).';
     mk_eci = C_ib * mk_body;
     hk_body = S.h_w(k,:).';
     hk_eci = C_ib * hk_body;
     tau_mtq_eci = C_ib * S.tau_mtq_body(k,:).';
+    tau_mtq_body = S.tau_mtq_body(k,:).';
+    tau_ext_body = S.tau_ext_body(k,:).';
+    tau_rw_body = S.tau_rw_body(k,:).';
+    tau_total_body = tau_ext_body + tau_mtq_body + tau_rw_body;
 
     tau_des_body = -P.KH * hk_body;
     tau_des_eci = C_ib * tau_des_body;
@@ -241,6 +282,16 @@ function update_frame(iFrame)
     [X,Y,Z] = plane_quad(r, bhat, 0.14*Re);
     planePatch.XData = X; planePatch.YData = Y; planePatch.ZData = Z;
 
+    % Magnetometer component arrows along body axes
+    Lmag = 0.18 * Re;
+    Bn = max(norm(Bk_body), 1e-30);
+    bx = (Bk_body(1)/Bn) * C_ib(:,1);
+    by = (Bk_body(2)/Bn) * C_ib(:,2);
+    bz = (Bk_body(3)/Bn) * C_ib(:,3);
+    update_quiver_dir(qmx, r, bx, Lmag);
+    update_quiver_dir(qmy, r, by, Lmag);
+    update_quiver_dir(qmz, r, bz, Lmag);
+
     % HUD values
     tau_dotB = dot(tau_mtq_eci, bhat);
     ang_deg = acosd(max(-1, min(1, dot(tau_mtq_eci, bhat) / max(norm(tau_mtq_eci), 1e-30))));
@@ -252,14 +303,20 @@ function update_frame(iFrame)
         'Frame %d/%d  (k=%d)\n' ...
         't = %.1f s\n' ...
         '||h_w|| = %.3e [N·m·s]\n' ...
-        '||B|| = %.1f [µT]\n' ...
+        'Magnetometer B_body = [%.1f %.1f %.1f] µT,  ||B|| = %.1f µT\n' ...
         '||m|| = %.3f [A·m^2]\n' ...
-        '||tau_{mtq}|| = %.2f [µN·m]\n' ...
+        'tau_{mtq,body} = [%.2f %.2f %.2f] µN·m,  ||tau_{mtq}|| = %.2f µN·m\n' ...
+        'tau_{total,body} = [%.2f %.2f %.2f] µN·m,  ||tau_total|| = %.2f µN·m\n' ...
         'tau_{mtq}·bhat = %.2e (ideal 0)\n' ...
         'angle(tau_{mtq},B) = %.2f deg (ideal 90)\n' ...
         'attitude error = %.3f deg\n' ...
         '\nTip: use mouse/scroll to rotate + zoom the 3D scene.' ...
-        ], iFrame, nFrames, k, t_s(k), norm(hk_body), 1e6*norm(Bk), norm(mk_body), 1e6*norm(S.tau_mtq_body(k,:)), tau_dotB, ang_deg, att_err_deg);
+        ], iFrame, nFrames, k, t_s(k), norm(hk_body), ...
+        1e6*Bk_body(1), 1e6*Bk_body(2), 1e6*Bk_body(3), 1e6*norm(Bk), ...
+        norm(mk_body), ...
+        1e6*tau_mtq_body(1), 1e6*tau_mtq_body(2), 1e6*tau_mtq_body(3), 1e6*norm(tau_mtq_body), ...
+        1e6*tau_total_body(1), 1e6*tau_total_body(2), 1e6*tau_total_body(3), 1e6*norm(tau_total_body), ...
+        tau_dotB, ang_deg, att_err_deg);
 
     txtTime.String = sprintf('t = %.1f s  |  mode=%s  |  bfield=%s', t_s(k), string(S.desatMode), bfield_label(P));
 
@@ -383,4 +440,3 @@ for L = Ls
     end
 end
 end
-

@@ -43,6 +43,27 @@ try
 catch
 end
 
+% Sun (optional)
+if isfield(P,'viz') && isfield(P.viz,'show_sun') && P.viz.show_sun
+    sun_dir = [1;0;0];
+    if isfield(P.viz,'sun_dir_eci') && numel(P.viz.sun_dir_eci) == 3
+        sun_dir = P.viz.sun_dir_eci(:);
+    end
+    sun_dir = sun_dir / max(norm(sun_dir), 1e-12);
+    sun_dist = 20;
+    if isfield(P.viz,'sun_distance_Re'); sun_dist = double(P.viz.sun_distance_Re); end
+    sun_rad = 2.5;
+    if isfield(P.viz,'sun_radius_Re'); sun_rad = double(P.viz.sun_radius_Re); end
+    sun_pos = (sun_dist * Re) * sun_dir;
+    [xs, ys, zs] = sphere(40);
+    surf(ax, sun_pos(1)+sun_rad*Re*xs, sun_pos(2)+sun_rad*Re*ys, sun_pos(3)+sun_rad*Re*zs, ...
+        'FaceColor',[0.95 0.7 0.1], 'FaceAlpha',0.85, 'EdgeColor','none', ...
+        'HandleVisibility','off');
+    quiver3(ax, 0,0,0, sun_pos(1), sun_pos(2), sun_pos(3), 0, ...
+        'Color',[0.95 0.7 0.1], 'LineWidth',1.1, 'MaxHeadSize',0.6, ...
+        'HandleVisibility','off');
+end
+
 % Earth sphere
 [xe, ye, ze] = sphere(60);
 surf(ax, Re*xe, Re*ye, Re*ze, ...

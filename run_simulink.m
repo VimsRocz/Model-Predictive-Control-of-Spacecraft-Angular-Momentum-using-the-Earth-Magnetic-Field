@@ -139,6 +139,15 @@ fprintf('Simulink full output: %s\n', out_file);
 
 plot_results_full_simulink(out_file);
 
+% Auto-animate full scene if enabled
+if isfield(P,'viz') && isfield(P.viz,'auto_animate_full') && P.viz.auto_animate_full
+    try
+        S = load(out_file);
+        animate_mtq_full_scene(P, S, "Simulink/full");
+    catch
+    end
+end
+
 % If a MATLAB run exists, print a quick consistency check.
 try
     fmat = fullfile(repo_root, 'MATLAB', 'Output', 'full', 'sim_out_full.mat');
