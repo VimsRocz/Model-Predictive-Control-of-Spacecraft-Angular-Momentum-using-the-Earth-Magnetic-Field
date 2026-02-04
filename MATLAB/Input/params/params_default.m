@@ -59,10 +59,11 @@ P.orbit.theta0_deg = 0;     % [deg] initial true anomaly (used in simple orbit)
 P.viz.nOrbitMarkers = 36;
 P.viz.sat_size_Re = 0.02; % spacecraft cube size as fraction of Earth radius (for visibility)
 P.viz.animate_all_steps = true; % true = animate every sample (full rotation)
-P.viz.animate_stride = 1;        % stride when animate_all_steps=true
+P.viz.animate_stride = 5;        % stride when animate_all_steps=true (increase for speed)
 P.viz.show_sun = true;           % show Sun in 3D scenes
-P.viz.sun_distance_Re = 20;      % distance of Sun from Earth center (in Earth radii)
-P.viz.sun_radius_Re = 2.5;       % Sun size (in Earth radii) for visualization
+% Sun is NOT to physical scale in distance/size (for visualization only).
+P.viz.sun_distance_Re = 6;       % distance of Sun from Earth center (in Earth radii)
+P.viz.sun_radius_Re = 1.5;       % Sun size (in Earth radii) for visualization
 P.viz.sun_dir_eci = [1; 0.2; 0]; % Sun direction in ECI (unit vector is derived)
 P.viz.auto_animate_full = true;  % auto-run 3D full animation after run
 P.viz.interactive = true;        % enable rotate/zoom/pan helpers

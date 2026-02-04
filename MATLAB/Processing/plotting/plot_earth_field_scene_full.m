@@ -35,20 +35,19 @@ camproj(ax,'perspective');
 
 % Interactive helpers
 if isfield(P,'viz') && isfield(P.viz,'interactive') && P.viz.interactive
+    try, set(fig, 'Renderer', 'opengl'); end
     try, rotate3d(fig,'on'); end
-    try, pan(fig,'on'); end
-    try, zoom(fig,'on'); end
     if isfield(P.viz,'zoom_speed')
         zspeed = double(P.viz.zoom_speed);
     else
         zspeed = 0.12;
     end
-    fig.WindowScrollWheelFcn = @(~,evt) camzoom(ax, 1 + zspeed * sign(evt.VerticalScrollCount));
-    try, cameratoolbar(fig,'Show'); end
+    fig.WindowScrollWheelFcn = @(~,evt) camzoom(ax, (1+zspeed) ^ (-evt.VerticalScrollCount));
     try
         ax.Toolbar.Visible = 'on';
         axtoolbar(ax, {'rotate','pan','zoomin','zoomout','restoreview'});
     catch
+        try, cameratoolbar(fig,'Show'); end
     end
 end
 
@@ -73,12 +72,8 @@ if isfield(P,'viz') && isfield(P.viz,'show_sun') && P.viz.show_sun
         'HandleVisibility','off');
 end
 
-% Earth sphere
-[xe, ye, ze] = sphere(60);
-earthSurf = surf(ax, Re*xe, Re*ye, Re*ze, ...
-    'FaceColor',[0.15 0.35 0.7], 'FaceAlpha',0.35, 'EdgeColor','none', ...
-    'FaceLighting','gouraud', 'SpecularStrength',0.2, 'HandleVisibility','off');
-try, shading(ax,'interp'); end
+% Earth sphere (textured if available)
+earthSurf = draw_earth_sphere(ax, Re, P);
 
 % Dipole field lines for context (even if IGRF is used for simulation)
 plot_dipole_field_lines(ax, Re, P);

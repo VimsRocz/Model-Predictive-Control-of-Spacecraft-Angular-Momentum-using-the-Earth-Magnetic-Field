@@ -36,6 +36,9 @@ else
 end
 nFrames = numel(idx_anim);
 
+% Keep marker/arrow count small for interactive performance.
+idx_mark = unique(round(linspace(1, N, nMarkers)));
+
 Re = P.earth.Re_m;
 
 % --- Figure / axes ---
@@ -50,20 +53,20 @@ camproj(ax,'perspective');
 
 % Interactive helpers
 if isfield(P,'viz') && isfield(P.viz,'interactive') && P.viz.interactive
+    try, set(fig, 'Renderer', 'opengl'); end
+    % Default to rotate (use toolbar buttons for pan/zoom).
     try, rotate3d(fig,'on'); end
-    try, pan(fig,'on'); end
-    try, zoom(fig,'on'); end
     if isfield(P.viz,'zoom_speed')
         zspeed = double(P.viz.zoom_speed);
     else
         zspeed = 0.12;
     end
-    fig.WindowScrollWheelFcn = @(~,evt) camzoom(ax, 1 + zspeed * sign(evt.VerticalScrollCount));
-    try, cameratoolbar(fig,'Show'); end
+    fig.WindowScrollWheelFcn = @(~,evt) camzoom(ax, (1+zspeed) ^ (-evt.VerticalScrollCount));
     try
         ax.Toolbar.Visible = 'on';
         axtoolbar(ax, {'rotate','pan','zoomin','zoomout','restoreview'});
     catch
+        try, cameratoolbar(fig,'Show'); end
     end
 end
 
@@ -88,24 +91,20 @@ if isfield(P,'viz') && isfield(P.viz,'show_sun') && P.viz.show_sun
         'HandleVisibility','off');
 end
 
-% Earth sphere
-[xe, ye, ze] = sphere(60);
-earthSurf = surf(ax, Re*xe, Re*ye, Re*ze, ...
-    'FaceColor',[0.15 0.35 0.7], 'FaceAlpha',0.35, 'EdgeColor','none', ...
-    'FaceLighting','gouraud', 'SpecularStrength',0.2, 'HandleVisibility','off');
-try, shading(ax,'interp'); end
+% Earth sphere (textured if available)
+earthSurf = draw_earth_sphere(ax, Re, P);
 
 % Dipole field lines + arrows (context)
 plot_dipole_field_lines(ax, Re, P);
 
 % Orbit line + markers
 plot3(ax, r_eci(:,1), r_eci(:,2), r_eci(:,3), 'k-', 'LineWidth', 1.2, 'HandleVisibility','off');
-plot3(ax, r_eci(idx_anim,1), r_eci(idx_anim,2), r_eci(idx_anim,3), 'ko', ...
+plot3(ax, r_eci(idx_mark,1), r_eci(idx_mark,2), r_eci(idx_mark,3), 'ko', ...
     'MarkerSize', 4, 'MarkerFaceColor',[1 0.9 0.2], 'HandleVisibility','off');
 
 % B direction arrows along orbit markers
 Lb = 0.12 * Re;
-for ii = idx_anim(:).'
+for ii = idx_mark(:).'
     [Bv, okB] = unit_vec(B_eci(ii,:));
     if okB
         quiver3(ax, r_eci(ii,1), r_eci(ii,2), r_eci(ii,3), Lb*Bv(1), Lb*Bv(2), Lb*Bv(3), 0, ...
