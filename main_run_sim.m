@@ -1,45 +1,50 @@
-clear; clc;
+function main_run_sim(ctrlMode, P)
+clc;
 
-P = params_default();
-
-% Choose controller: "baseline" or "mpc"
-ctrlMode = "mpc";
-
-x = zeros(3, P.N);     % momentum error state
-m = zeros(3, P.N);     % dipole command
-tau_ext_log = zeros(3, P.N);
-B_log = zeros(3, P.N);
-
-% Initial momentum (example)
-x(:,1) = [0.02; -0.01; 0.03]; % [N*m*s] ~ wheel momentum error
-
-% Providers
-B_provider   = @(kk) orbit_propagator_simple(kk, P);
-tau_provider = @(kk) ext_torques(kk, P);
-
-m_prev = zeros(3,1);
-
-for k = 1:P.N-1
-    Bk = B_provider(k);
-    tk = tau_provider(k);
-
-    B_log(:,k) = Bk;
-    tau_ext_log(:,k) = tk;
-
-    if ctrlMode == "baseline"
-        mk = baseline_mtq(x(:,k), Bk, P);
-    else
-        mk = mpc_mtq_qp(x(:,k), k, P, B_provider, tau_provider, m_prev);
-    end
-
-    m(:,k) = mk;
-
-    % Plant update: x_{k+1} = x_k + Ts*(tau_ext - [B]_x*m)
-    x(:,k+1) = x(:,k) + P.Ts*( tk - skew(Bk)*mk );
-
-    m_prev = mk;
+if nargin < 1 || strlength(ctrlMode) == 0
+    % Keep MATLAB and Simulink results consistent by default.
+    ctrlMode = "baseline";
 end
 
-save("sim_out.mat","P","x","m","tau_ext_log","B_log","ctrlMode");
+repo_root = fileparts(mfilename('fullpath'));
+addpath(repo_root);
+addpath(fullfile(repo_root, 'params'));
+addpath(fullfile(repo_root, 'models'));
+addpath(fullfile(repo_root, 'controllers'));
+addpath(fullfile(repo_root, 'plotting'));
 
-plot_results("sim_out.mat");
+if nargin < 2 || isempty(P)
+    P = params_default();
+end
+
+S = simulate_mtq(P, ctrlMode);
+
+x = S.x;
+m = S.m;
+tau_ext_log = S.tau_ext_log;
+tau_mtq_log = S.tau_mtq_log;
+tau_total_log = S.tau_total_log;
+B_log = S.B_log;
+ctrlMode = S.ctrlMode;
+solve_time_s = S.solve_time_s; %#ok<NASGU>
+
+out_dir = fullfile(repo_root, "outputs", "matlab");
+if ~exist(out_dir, "dir")
+    mkdir(out_dir);
+end
+safe_mode = string(regexprep(char(ctrlMode), '[^A-Za-z0-9]+', '_'));
+out_file_mode = fullfile(out_dir, "sim_out_matlab_" + safe_mode + ".mat");
+out_file_latest = fullfile(out_dir, "sim_out_matlab.mat");
+
+save(out_file_mode, "P","x","m","tau_ext_log","tau_mtq_log","tau_total_log","B_log","ctrlMode","solve_time_s");
+try
+    copyfile(out_file_mode, out_file_latest, "f");
+catch
+end
+
+fprintf('MATLAB output: %s\n', out_file_mode);
+fprintf('  x(0) = [% .4e % .4e % .4e]\n', x(1,1), x(2,1), x(3,1));
+fprintf('  m(0) = [% .4e % .4e % .4e]\n', m(1,1), m(2,1), m(3,1));
+
+plot_results(out_file_mode);
+end
